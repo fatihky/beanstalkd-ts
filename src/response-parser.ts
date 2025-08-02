@@ -15,6 +15,7 @@ import {
   NotFoundResponse,
   OkResponse,
   OutOfMemoryResponse,
+  PausedResponse,
   ReservedResponse,
   TimedOutResponse,
   UnknownCommandResponse,
@@ -60,6 +61,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, NotFoundResponse.parse(data));
     if (bufStartsWith(data, OutOfMemoryResponse.prefix))
       return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
+    if (bufStartsWith(data, PausedResponse.prefix))
+      return this.handleParseResult(data, PausedResponse.parse(data));
     if (bufStartsWith(data, TimedOutResponse.prefix))
       return this.handleParseResult(data, TimedOutResponse.parse(data));
     if (bufStartsWith(data, UnknownCommandResponse.prefix))

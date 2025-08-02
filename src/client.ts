@@ -1,12 +1,14 @@
 import { createConnection, type Socket } from 'node:net';
 import {
-  type PutParams,
+  type BeanstalkdCommand,
+  pauseTube,
   put,
+  type PutParams,
   reserve,
   reserveJob,
   reserveWithTimeout,
-  type StatsResult,
   stats,
+  type StatsResult,
   use,
 } from './commands';
 import { DeadlineSoonError, NotFoundError, TimedOutError } from './errors';
@@ -19,6 +21,7 @@ import {
   type BeanstalkdResponse,
   DeadlineSoonResponse,
   NotFoundResponse,
+  type PausedResponse,
   type ReservedResponse,
   TimedOutResponse,
   type UsingTubeResponse,
@@ -104,6 +107,10 @@ export class BeanstalkdClient {
     });
   }
 
+  async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
+    return this.runCommand(pauseTube, { tube, delay: delaySeconds });
+  }
+
   /**
    * put a job into the beanstalkd
    *
@@ -115,93 +122,69 @@ export class BeanstalkdClient {
     payload: string,
     opts?: Partial<Omit<PutParams, 'data'>>,
   ): Promise<InsertedResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
-
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(put.handle(response)),
-      );
-
-      this.connection.write(
-        put.compose({
-          data: payload,
-          pri: opts?.pri ?? this.defaultPriority,
-          delay: opts?.delay ?? this.defaultDelay,
-          ttr: opts?.ttr ?? this.defaultTtr,
-        }),
-      );
+    return this.runCommand(put, {
+      data: payload,
+      pri: opts?.pri ?? this.defaultPriority,
+      delay: opts?.delay ?? this.defaultDelay,
+      ttr: opts?.ttr ?? this.defaultTtr,
     });
   }
 
+  /**
+   * Reserve a job.
+   * This command blocks infinitely until a job gets reserved.
+   */
   async reserve(): Promise<ReservedResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
-
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(reserve.handle(response)),
-      );
-
-      this.connection.write(reserve.compose());
-    });
+    return this.runCommand(reserve, void 0);
   }
 
+  /**
+   * Reserve a specific job
+   */
   async reserveJob(jobId: number): Promise<ReservedResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
-
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(reserveJob.handle(response)),
-      );
-
-      this.connection.write(reserveJob.compose(jobId));
-    });
+    return this.runCommand(reserveJob, jobId);
   }
 
   async reserveWithTimeout(timeoutSeconds: number): Promise<ReservedResponse> {
-    return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
-
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(reserveWithTimeout.handle(response)),
-      );
-
-      this.connection.write(reserveWithTimeout.compose(timeoutSeconds));
-    });
+    return this.runCommand(reserveWithTimeout, timeoutSeconds);
   }
 
   async stats(): Promise<StatsResult> {
-    return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
-
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(stats.handle(response)),
-      );
-
-      this.connection.write(stats.compose());
-    });
+    return this.runCommand(stats, void 0);
   }
 
   async use(tube: string): Promise<UsingTubeResponse> {
+    return this.tubeCommand(use, tube);
+  }
+
+  private runCommand<A, T>(cmd: BeanstalkdCommand<T, A>, arg: A): Promise<T> {
     return new Promise((resolve, reject) => {
       if (!this.connection) return reject(new Error('not connected'));
 
       this.queue.push((response) =>
         response instanceof Error
           ? reject(response)
-          : resolve(use.handle(response)),
+          : resolve(cmd.handle(response)),
       );
 
-      this.connection.write(use.compose(tube));
+      this.connection.write(cmd.compose(arg));
+    });
+  }
+
+  private tubeCommand<T>(
+    cmd: BeanstalkdCommand<T, string>,
+    tube: string,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) return reject(new Error('not connected'));
+
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(cmd.handle(response)),
+      );
+
+      this.connection.write(cmd.compose(tube));
     });
   }
 }

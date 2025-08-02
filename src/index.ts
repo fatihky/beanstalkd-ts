@@ -25,7 +25,11 @@ async function main() {
 
   console.log('reserve with timeout result:', reserveWithTimeoutResult);
 
+  const pauseTubeResult = await client.pauseTube('deneme', 10);
+
+  console.log('pause tube result:', pauseTubeResult);
+
   await client.close();
 }
 
-main().catch((err) => console.error('Main error:', err));
+main().catch((err) => console.log('Main error:', err));
