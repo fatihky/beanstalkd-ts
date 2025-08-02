@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { UnknownCommandResponse } from '../../src/responses/unknown-command-response';
+import { UnknownCommandResponse } from '../../src/responses';
 
 describe('unknown command response', () => {
   it('should parse unknown command response', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { OutOfMemoryResponse } from '../../src/responses/out-of-memory-response';
+import { OutOfMemoryResponse } from '../../src/responses';
 
 describe('out of memory response', () => {
   it('should parse out of memory response', () => {

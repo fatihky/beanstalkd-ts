@@ -1,3 +1,4 @@
+export * from './bad-format-response';
 export * from './beanstalkd-response';
 export * from './buried-response';
 export * from './draining-response';
@@ -7,3 +8,4 @@ export * from './internal-error-response';
 export * from './job-too-big-response';
 export * from './ok-response';
 export * from './out-of-memory-response';
+export * from './unknown-command-response';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { InternalErrorResponse } from '../../src/responses/internal-error-response';
+import { InternalErrorResponse } from '../../src/responses';
 
 describe('internal error response', () => {
   it('should parse internal error response', () => {
