@@ -21,6 +21,10 @@ async function main() {
 
   console.log('reserve result:', reserveResult);
 
+  const reserveWithTimeoutResult = await client.reserveWithTimeout(10);
+
+  console.log('reserve with timeout result:', reserveWithTimeoutResult);
+
   await client.close();
 }
 
