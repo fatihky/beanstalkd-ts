@@ -2,7 +2,7 @@ export const crlf = Buffer.from('\r\n');
 export const emptyBuf = Buffer.alloc(0);
 
 export function bufStartsWith(buf: Buffer, prefix: Buffer): boolean {
-  return buf.compare(prefix, 0) === 1;
+  return buf.subarray(0, prefix.length).compare(prefix) === 0;
 }
 
 export function bufEndsWith(buf: Buffer, suffix: Buffer): boolean {
