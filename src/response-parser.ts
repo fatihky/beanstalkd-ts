@@ -7,6 +7,7 @@ import {
   BeanstalkdResponse,
   BuriedResponse,
   DeadlineSoonResponse,
+  DeletedResponse,
   DrainingResponse,
   ExpectedCrlfResponse,
   InsertedResponse,
@@ -51,6 +52,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, DeadlineSoonResponse.parse(data));
     if (bufStartsWith(data, DrainingResponse.prefix))
       return this.handleParseResult(data, DrainingResponse.parse(data));
+    if (bufStartsWith(data, DeletedResponse.prefix))
+      return this.handleParseResult(data, DeletedResponse.parse(data));
     if (bufStartsWith(data, InternalErrorResponse.prefix))
       return this.handleParseResult(data, InternalErrorResponse.parse(data));
     if (bufStartsWith(data, ExpectedCrlfResponse.prefix))

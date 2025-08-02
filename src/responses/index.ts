@@ -2,6 +2,7 @@ export * from './bad-format-response';
 export * from './beanstalkd-response';
 export * from './buried-response';
 export * from './deadline-soon-response';
+export * from './deleted-response';
 export * from './draining-response';
 export * from './expected-crlf-response';
 export * from './inserted-response';
