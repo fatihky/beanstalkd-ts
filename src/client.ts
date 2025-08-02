@@ -1,5 +1,12 @@
 import { createConnection, type Socket } from 'node:net';
-import { put, stats, use, type PutParams, type StatsResult } from './commands';
+import {
+  put,
+  reserve,
+  stats,
+  use,
+  type PutParams,
+  type StatsResult,
+} from './commands';
 import { DeadlineSoonError, TimedOutError } from './errors';
 import { BadFormatError } from './errors/bad-format-error';
 import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
@@ -8,6 +15,7 @@ import { UnkownCommandError } from './errors/unknown-command-error';
 import { BeanstalkdResponseParser } from './response-parser';
 import {
   DeadlineSoonResponse,
+  ReservedResponse,
   TimedOutResponse,
   type BeanstalkdResponse,
   type UsingTubeResponse,
@@ -120,6 +128,20 @@ export class BeanstalkdClient {
           ttr: opts?.ttr ?? this.defaultTtr,
         }),
       );
+    });
+  }
+
+  async reserve(): Promise<ReservedResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) return reject(new Error('not connected'));
+
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(reserve.handle(response)),
+      );
+
+      this.connection.write(reserve.compose());
     });
   }
 

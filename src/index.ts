@@ -17,6 +17,10 @@ async function main() {
 
   console.log('use result:', useResult);
 
+  const reserveResult = await client.reserve();
+
+  console.log('reserve result:', reserveResult);
+
   await client.close();
 }
 
