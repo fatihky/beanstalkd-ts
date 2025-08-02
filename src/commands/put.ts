@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
 import type { BeanstalkdResponse } from '../responses';
+import { BuriedResponse } from '../responses/buried-response';
 import { InsertedResponse } from '../responses/inserted-response';
 import { crlf } from '../utils';
 import { BeanstalkdCommand } from './command';
@@ -11,7 +12,10 @@ export interface PutParams {
   data: Buffer | string;
 }
 
-export class PutCommand extends BeanstalkdCommand<InsertedResponse, PutParams> {
+export class PutCommand extends BeanstalkdCommand<
+  InsertedResponse | BuriedResponse,
+  PutParams
+> {
   /**
    * "put <pri> <delay> <ttr> <bytes>\r\n<data>\r\n"
    */
@@ -25,7 +29,11 @@ export class PutCommand extends BeanstalkdCommand<InsertedResponse, PutParams> {
   }
 
   override handle(response: BeanstalkdResponse): InsertedResponse {
-    if (response instanceof InsertedResponse) return response;
+    if (
+      response instanceof InsertedResponse ||
+      response instanceof BuriedResponse
+    )
+      return response;
 
     throw new BeanstalkdInvalidResponseError(
       'put: expected an "inserted" response',

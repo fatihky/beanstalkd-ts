@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
-import { parseResponseWithId } from '../src/responses/parse-response-with-id';
+import { parseResponseWithId } from '../src/responses/utils/parse-response-with-id';
 
 describe('parse responses with id', () => {
   const prefix = Buffer.from('PREFIX ');

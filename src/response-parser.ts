@@ -4,6 +4,7 @@
  */
 import { BeanstalkdResponseOk } from './responses';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
+import { BuriedResponse } from './responses/buried-response';
 import { InsertedResponse } from './responses/inserted-response';
 import { bufStartsWith } from './utils';
 
@@ -22,6 +23,12 @@ export class BeanstalkdResponseParser {
 
     if (bufStartsWith(data, InsertedResponse.prefix))
       return this.handleParseResult(data, InsertedResponse.parse(data));
+
+    if (bufStartsWith(data, BuriedResponse.prefix))
+      return this.handleParseResult(data, BuriedResponse.parse(data));
+
+    // wait for more data
+    this.buf = data;
 
     return null;
   }

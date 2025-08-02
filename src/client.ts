@@ -1,5 +1,5 @@
 import { createConnection, type Socket } from 'node:net';
-import { BeanstalkdResponseParser } from './beanstalkd-response-parser';
+import { BeanstalkdResponseParser } from './response-parser';
 import { type PutParams, put, type StatsResult, stats } from './commands';
 import type { BeanstalkdResponse } from './responses';
 import type { InsertedResponse } from './responses/inserted-response';

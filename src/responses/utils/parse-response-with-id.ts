@@ -1,5 +1,5 @@
-import { BeanstalkdProtocolError } from '../beanstalkd-protocol-error';
-import { bufStartsWith, crlf } from '../utils';
+import { BeanstalkdProtocolError } from '../../beanstalkd-protocol-error';
+import { bufStartsWith, crlf } from '../../utils';
 
 export function parseResponseWithId(
   input: Buffer,
@@ -33,4 +33,18 @@ export function parseResponseWithId(
   if (input.length === crlfIndex + crlf.byteLength) return id;
 
   return [id, input.subarray(crlfIndex + crlf.byteLength)];
+}
+
+export function handleParseResponseWithId<T>(
+  cons: new (jobId: number) => T,
+  buf: Buffer,
+  prefix: Buffer,
+): T | [T, Buffer] | null {
+  const result = parseResponseWithId(buf, prefix);
+
+  if (result === null) return null;
+
+  if (typeof result === 'number') return new cons(result);
+
+  return [new cons(result[0]), result[1]];
 }

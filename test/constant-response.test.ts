@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ConstantResponse } from '../src/responses/constant-response';
+import { ConstantResponse } from '../src/responses/utils/constant-response';
 import assert from 'node:assert';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
 

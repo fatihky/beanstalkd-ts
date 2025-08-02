@@ -1,6 +1,6 @@
-import { BeanstalkdProtocolError } from '../beanstalkd-protocol-error';
-import { bufStartsWith } from '../utils';
-import { BeanstalkdResponse } from './beanstalkd-response';
+import { BeanstalkdProtocolError } from '../../beanstalkd-protocol-error';
+import { bufStartsWith } from '../../utils';
+import { BeanstalkdResponse } from '../beanstalkd-response';
 
 export class ConstantResponse extends BeanstalkdResponse {
   constructor(readonly data: Buffer) {
