@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../../src/beanstalkd-protocol-error';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { BeanstalkdResponseOk } from '../../src/responses';
+import { OkResponse } from '../../src/responses';
 
 /**
  * test beanstalkd's ok response parser
@@ -15,7 +15,7 @@ describe('ok response', () => {
     const input = Buffer.from('OK 12\r\nbeanstalkd-ts\r\n');
     const response = parser.read(input);
 
-    expect(response).instanceOf(BeanstalkdResponseOk);
+    expect(response).instanceOf(OkResponse);
   });
 
   it('parse ok response if partially received', () => {
@@ -27,7 +27,7 @@ describe('ok response', () => {
 
     const result = parser.read(input2);
 
-    expect(result).instanceOf(BeanstalkdResponseOk);
+    expect(result).instanceOf(OkResponse);
   });
 
   it('parse ok response if partially received two commands', () => {
@@ -40,16 +40,16 @@ describe('ok response', () => {
 
     const result1 = parser.read(input2);
 
-    expect(result1).instanceOf(BeanstalkdResponseOk);
+    expect(result1).instanceOf(OkResponse);
 
     const result2 = parser.read(input3);
 
-    expect(result2).instanceOf(BeanstalkdResponseOk);
+    expect(result2).instanceOf(OkResponse);
   });
 
   it('should return remaining bytes to be parsed', () => {
     const input = Buffer.from('OK 12\r\nbeanstalkd-ts\r\nextra');
-    const response = BeanstalkdResponseOk.parse(input);
+    const response = OkResponse.parse(input);
 
     // parser should return remaining bytes along with the OK response
     // we expect parser to return this tuple:
@@ -59,7 +59,7 @@ describe('ok response', () => {
 
     assert(Array.isArray(response));
 
-    expect(response[0]).toBeInstanceOf(BeanstalkdResponseOk);
+    expect(response[0]).toBeInstanceOf(OkResponse);
     expect(response[1]).toBeInstanceOf(Buffer);
   });
 

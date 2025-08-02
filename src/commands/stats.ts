@@ -1,5 +1,5 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, BeanstalkdResponseOk } from '../responses';
+import { type BeanstalkdResponse, OkResponse } from '../responses';
 import { crlf } from '../utils';
 import { BeanstalkdCommand } from './command';
 
@@ -167,7 +167,7 @@ export class StatsCommand extends BeanstalkdCommand<StatsResult, void> {
   }
 
   override handle(response: BeanstalkdResponse) {
-    if (!(response instanceof BeanstalkdResponseOk))
+    if (!(response instanceof OkResponse))
       throw new BeanstalkdInvalidResponseError();
 
     return new StatsResult(response.data.toString());

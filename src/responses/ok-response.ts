@@ -9,16 +9,14 @@ const okPrefix = Buffer.from('OK ');
  * Used for many commands.
  * "OK <bytes>\r\n<data>\r\n"
  */
-export class BeanstalkdResponseOk extends BeanstalkdResponse {
+export class OkResponse extends BeanstalkdResponse {
   static readonly prefix = okPrefix;
 
   constructor(readonly data: Buffer) {
     super();
   }
 
-  static parse(
-    buf: Buffer,
-  ): BeanstalkdResponseOk | [BeanstalkdResponseOk, Buffer] | null {
+  static parse(buf: Buffer): OkResponse | [OkResponse, Buffer] | null {
     const crlfIndex = buf.indexOf(crlf);
 
     if (crlfIndex === -1) return null;
@@ -56,9 +54,9 @@ export class BeanstalkdResponseOk extends BeanstalkdResponse {
     if (buf.byteLength > expectedByteLength) {
       const remaining = buf.subarray(expectedByteLength + 1);
 
-      return [new BeanstalkdResponseOk(data), remaining];
+      return [new OkResponse(data), remaining];
     }
 
-    return new BeanstalkdResponseOk(data);
+    return new OkResponse(data);
   }
 }
