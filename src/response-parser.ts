@@ -11,6 +11,7 @@ import { InsertedResponse } from './responses/inserted-response';
 import { InternalErrorResponse } from './responses/internal-error-response';
 import { JobTooBigResponse } from './responses/job-too-big-response';
 import { OutOfMemoryResponse } from './responses/out-of-memory-response';
+import { UnknownCommandResponse } from './responses/unknown-command-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -45,6 +46,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, JobTooBigResponse.parse(data));
     if (bufStartsWith(data, OutOfMemoryResponse.prefix))
       return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
+    if (bufStartsWith(data, UnknownCommandResponse.prefix))
+      return this.handleParseResult(data, UnknownCommandResponse.parse(data));
 
     // wait for more data
     this.buf = data;

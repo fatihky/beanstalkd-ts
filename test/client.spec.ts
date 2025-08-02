@@ -6,6 +6,8 @@ import { OutOfMemoryError } from '../src/errors/out-of-memory-error';
 import { BadFormatResponse } from '../src/responses/bad-format-response';
 import { InternalErrorResponse } from '../src/responses/internal-error-response';
 import { OutOfMemoryResponse } from '../src/responses/out-of-memory-response';
+import { UnknownCommandResponse } from '../src/responses/unknown-command-response';
+import { UnkownCommandError } from '../src/errors/unknown-command-error';
 
 describe('beanstalkd client tests', () => {
   it('should handle error responses', () => {
@@ -18,5 +20,8 @@ describe('beanstalkd client tests', () => {
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new OutOfMemoryResponse()),
     ).toBeInstanceOf(OutOfMemoryError);
+    expect(
+      BeanstalkdClient.handleGenericErrorResponse(new UnknownCommandResponse()),
+    ).toBeInstanceOf(UnkownCommandError);
   });
 });

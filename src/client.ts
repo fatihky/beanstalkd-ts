@@ -1,14 +1,16 @@
 import { createConnection, type Socket } from 'node:net';
-import { type PutParams, put, type StatsResult, stats } from './commands';
+import { put, stats, type PutParams, type StatsResult } from './commands';
 import { BadFormatError } from './errors/bad-format-error';
 import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
 import { OutOfMemoryError } from './errors/out-of-memory-error';
+import { UnkownCommandError } from './errors/unknown-command-error';
 import { BeanstalkdResponseParser } from './response-parser';
 import type { BeanstalkdResponse } from './responses';
 import { BadFormatResponse } from './responses/bad-format-response';
 import type { InsertedResponse } from './responses/inserted-response';
 import { InternalErrorResponse } from './responses/internal-error-response';
 import { OutOfMemoryResponse } from './responses/out-of-memory-response';
+import { UnknownCommandResponse } from './responses/unknown-command-response';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -47,6 +49,8 @@ export class BeanstalkdClient {
     if (response instanceof InternalErrorResponse)
       return new BeanstalkdInternalError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
+    if (response instanceof UnknownCommandResponse)
+      return new UnkownCommandError();
 
     return null;
   }
