@@ -6,6 +6,7 @@ import { DrainingResponse, OkResponse, UsingTubeResponse } from './responses';
 import { BadFormatResponse } from './responses/bad-format-response';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
+import { DeadlineSoonResponse } from './responses/deadline-soon-response';
 import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
 import { InsertedResponse } from './responses/inserted-response';
 import { InternalErrorResponse } from './responses/internal-error-response';
@@ -36,6 +37,8 @@ export class BeanstalkdResponseParser {
     // rest of responses are alphabetilcally sorted
     if (bufStartsWith(data, BadFormatResponse.prefix))
       return this.handleParseResult(data, BadFormatResponse.parse(data));
+    if (bufStartsWith(data, DeadlineSoonResponse.prefix))
+      return this.handleParseResult(data, DeadlineSoonResponse.parse(data));
     if (bufStartsWith(data, DrainingResponse.prefix))
       return this.handleParseResult(data, DrainingResponse.parse(data));
     if (bufStartsWith(data, InternalErrorResponse.prefix))

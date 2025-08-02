@@ -3,11 +3,13 @@ import { BeanstalkdClient } from '../src/client';
 import {
   BadFormatError,
   BeanstalkdInternalError,
+  DeadlineSoonError,
   OutOfMemoryError,
   UnkownCommandError,
 } from '../src/errors';
 import {
   BadFormatResponse,
+  DeadlineSoonResponse,
   InternalErrorResponse,
   OutOfMemoryResponse,
   UnknownCommandResponse,
@@ -18,6 +20,9 @@ describe('beanstalkd client tests', () => {
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new BadFormatResponse()),
     ).toBeInstanceOf(BadFormatError);
+    expect(
+      BeanstalkdClient.handleGenericErrorResponse(new DeadlineSoonResponse()),
+    ).toBeInstanceOf(DeadlineSoonError);
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new InternalErrorResponse()),
     ).toBeInstanceOf(BeanstalkdInternalError);
