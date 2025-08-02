@@ -1,10 +1,12 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
 import { BuriedError } from '../errors/buried-error';
 import { ExpectedCrlfError } from '../errors/expected-crlf-error';
+import { JobTooBigError } from '../errors/job-too-big-error';
 import type { BeanstalkdResponse } from '../responses';
 import { BuriedResponse } from '../responses/buried-response';
 import { ExpectedCrlfResponse } from '../responses/expected-crlf-response';
 import { InsertedResponse } from '../responses/inserted-response';
+import { JobTooBigResponse } from '../responses/job-too-big-response';
 import { crlf } from '../utils';
 import { BeanstalkdCommand } from './command';
 
@@ -32,14 +34,16 @@ export class PutCommand extends BeanstalkdCommand<
   }
 
   override handle(response: BeanstalkdResponse): InsertedResponse {
+    // we expect inserted response so we check it first
     if (response instanceof InsertedResponse) return response;
 
+    // rest of the checks are alphabetically sorted
     if (response instanceof BuriedResponse)
       throw new BuriedError(response.jobId);
 
-    if (response instanceof ExpectedCrlfResponse) {
-      throw new ExpectedCrlfError();
-    }
+    if (response instanceof ExpectedCrlfResponse) throw new ExpectedCrlfError();
+
+    if (response instanceof JobTooBigResponse) throw new JobTooBigError();
 
     throw new BeanstalkdInvalidResponseError(
       'put: expected an "inserted" response',

@@ -7,6 +7,7 @@ import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
 import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
 import { InsertedResponse } from './responses/inserted-response';
+import { JobTooBigResponse } from './responses/job-too-big-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -31,6 +32,8 @@ export class BeanstalkdResponseParser {
     // rest of responses are alphabetilcally sorted
     if (bufStartsWith(data, ExpectedCrlfResponse.prefix))
       return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
+    if (bufStartsWith(data, JobTooBigResponse.prefix))
+      return this.handleParseResult(data, JobTooBigResponse.parse(data));
 
     // wait for more data
     this.buf = data;
