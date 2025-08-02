@@ -9,5 +9,5 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true
   },
-  "include": ["./src"]
+  "include": ["./bench", "./src"]
 }
