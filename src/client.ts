@@ -1,15 +1,17 @@
 import { createConnection, type Socket } from 'node:net';
-import { BeanstalkdResponseParser } from './response-parser';
 import { type PutParams, put, type StatsResult, stats } from './commands';
+import { OutOfMemoryError } from './errors/out-of-memory-error';
+import { BeanstalkdResponseParser } from './response-parser';
 import type { BeanstalkdResponse } from './responses';
 import type { InsertedResponse } from './responses/inserted-response';
+import { OutOfMemoryResponse } from './responses/out-of-memory-response';
 
 interface BeanstalkdClientParams {
   host?: string;
   port?: number;
 }
 
-type ResponseHandler = (response: BeanstalkdResponse) => void;
+type ResponseHandler = (response: BeanstalkdResponse | Error) => void;
 
 export class BeanstalkdClient {
   readonly host: string;
@@ -34,6 +36,14 @@ export class BeanstalkdClient {
     this.port = params?.port ?? 11300;
   }
 
+  static handleGenericErrorResponse(
+    response: BeanstalkdResponse,
+  ): Error | null {
+    if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
+
+    return null;
+  }
+
   async connect() {
     if (this.connection) return;
 
@@ -49,7 +59,7 @@ export class BeanstalkdClient {
 
         if (!handler) throw new Error('Got a response but no handlers found');
 
-        handler(result);
+        handler(BeanstalkdClient.handleGenericErrorResponse(result) ?? result);
       });
     });
   }
@@ -76,7 +86,11 @@ export class BeanstalkdClient {
     return new Promise((resolve, reject) => {
       if (!this.connection) return reject(new Error('not connected'));
 
-      this.queue.push((response) => resolve(put.handle(response)));
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(put.handle(response)),
+      );
 
       this.connection.write(
         put.compose({
@@ -93,7 +107,11 @@ export class BeanstalkdClient {
     return new Promise((resolve, reject) => {
       if (!this.connection) return reject(new Error('not connected'));
 
-      this.queue.push((response) => resolve(stats.handle(response)));
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(stats.handle(response)),
+      );
 
       this.connection.write(stats.compose());
     });

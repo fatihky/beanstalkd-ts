@@ -8,6 +8,7 @@ import { BuriedResponse } from './responses/buried-response';
 import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
 import { InsertedResponse } from './responses/inserted-response';
 import { JobTooBigResponse } from './responses/job-too-big-response';
+import { OutOfMemoryResponse } from './responses/out-of-memory-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -36,6 +37,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
     if (bufStartsWith(data, JobTooBigResponse.prefix))
       return this.handleParseResult(data, JobTooBigResponse.parse(data));
+    if (bufStartsWith(data, OutOfMemoryResponse.prefix))
+      return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
 
     // wait for more data
     this.buf = data;
