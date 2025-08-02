@@ -1,6 +1,6 @@
 export * from './bad-format-response';
 export * from './beanstalkd-response';
-export * from './buried-response';
+export * from './job-buried-response';
 export * from './deadline-soon-response';
 export * from './deleted-response';
 export * from './draining-response';

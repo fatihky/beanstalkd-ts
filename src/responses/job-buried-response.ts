@@ -3,7 +3,10 @@ import { handleParseResponseWithId } from './utils/parse-response-with-id';
 
 const prefix = Buffer.from('BURIED ');
 
-export class BuriedResponse extends BeanstalkdResponse {
+/**
+ * Buried response with job id
+ */
+export class JobBuriedResponse extends BeanstalkdResponse {
   // see: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L90
   static prefix = prefix;
 
@@ -12,6 +15,6 @@ export class BuriedResponse extends BeanstalkdResponse {
   }
 
   static parse(input: Buffer) {
-    return handleParseResponseWithId(BuriedResponse, input, prefix);
+    return handleParseResponseWithId(JobBuriedResponse, input, prefix);
   }
 }

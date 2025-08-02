@@ -1,6 +1,6 @@
 export * from './bad-format-error';
 export * from './beanstalkd-internal-error';
-export * from './buried-error';
+export * from './job-buried-error';
 export * from './deadline-soon-error';
 export * from './draining-error';
 export * from './expected-crlf-error';

@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { BuriedResponse } from '../../src/responses';
+import { JobBuriedResponse } from '../../src/responses';
 
 describe('buried response', () => {
   it('should parse buried response', () => {
@@ -9,8 +9,8 @@ describe('buried response', () => {
     const result = parser.read(Buffer.from('BURIED 1234\r\n'));
 
     expect(result).not.toBeNull();
-    expect(result).toBeInstanceOf(BuriedResponse);
-    assert(result instanceof BuriedResponse);
+    expect(result).toBeInstanceOf(JobBuriedResponse);
+    assert(result instanceof JobBuriedResponse);
     expect(result.jobId).toBe(1234);
   });
 });

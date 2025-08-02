@@ -1,10 +1,10 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { BuriedError } from '../errors/buried-error';
+import { JobBuriedError } from '../errors/job-buried-error';
 import { DrainingError } from '../errors/draining-error';
 import { ExpectedCrlfError } from '../errors/expected-crlf-error';
 import { JobTooBigError } from '../errors/job-too-big-error';
 import { type BeanstalkdResponse, DrainingResponse } from '../responses';
-import { BuriedResponse } from '../responses/buried-response';
+import { JobBuriedResponse } from '../responses/job-buried-response';
 import { ExpectedCrlfResponse } from '../responses/expected-crlf-response';
 import { InsertedResponse } from '../responses/inserted-response';
 import { JobTooBigResponse } from '../responses/job-too-big-response';
@@ -19,7 +19,7 @@ export interface PutParams {
 }
 
 export class PutCommand extends BeanstalkdCommand<
-  InsertedResponse | BuriedResponse,
+  InsertedResponse | JobBuriedResponse,
   PutParams
 > {
   /**
@@ -39,8 +39,8 @@ export class PutCommand extends BeanstalkdCommand<
     if (response instanceof InsertedResponse) return response;
 
     // rest of the checks are alphabetically sorted
-    if (response instanceof BuriedResponse)
-      throw new BuriedError(response.jobId);
+    if (response instanceof JobBuriedResponse)
+      throw new JobBuriedError(response.jobId);
 
     if (response instanceof DrainingResponse) throw new DrainingError();
 

@@ -1,4 +1,4 @@
-export class BuriedError extends Error {
+export class JobBuriedError extends Error {
   constructor(
     readonly jobId: number,
     message?: string,
