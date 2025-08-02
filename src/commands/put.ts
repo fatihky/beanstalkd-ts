@@ -1,6 +1,8 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
+import { ExpectedCrlfError } from '../errors/expected-crlf-error';
 import type { BeanstalkdResponse } from '../responses';
 import { BuriedResponse } from '../responses/buried-response';
+import { ExpectedCrlfResponse } from '../responses/expected-crlf-response';
 import { InsertedResponse } from '../responses/inserted-response';
 import { crlf } from '../utils';
 import { BeanstalkdCommand } from './command';
@@ -34,6 +36,10 @@ export class PutCommand extends BeanstalkdCommand<
       response instanceof BuriedResponse
     )
       return response;
+
+    if (response instanceof ExpectedCrlfResponse) {
+      throw new ExpectedCrlfError();
+    }
 
     throw new BeanstalkdInvalidResponseError(
       'put: expected an "inserted" response',

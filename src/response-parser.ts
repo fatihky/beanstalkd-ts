@@ -5,6 +5,7 @@
 import { OkResponse } from './responses';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
+import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
 import { InsertedResponse } from './responses/inserted-response';
 import { bufStartsWith } from './utils';
 
@@ -26,6 +27,10 @@ export class BeanstalkdResponseParser {
 
     if (bufStartsWith(data, BuriedResponse.prefix))
       return this.handleParseResult(data, BuriedResponse.parse(data));
+
+    // rest of responses are alphabetilcally sorted
+    if (bufStartsWith(data, ExpectedCrlfResponse.prefix))
+      return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
 
     // wait for more data
     this.buf = data;

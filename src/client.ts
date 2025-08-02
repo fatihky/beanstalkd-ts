@@ -62,6 +62,13 @@ export class BeanstalkdClient {
     });
   }
 
+  /**
+   * put a job into the beanstalkd
+   *
+   * Might throw these errors:
+   * - ExpectedCrlfError
+   * - BeanstalkdInvalidResponseError: got an invalid response
+   */
   async put(
     payload: string,
     opts?: Partial<Omit<PutParams, 'data'>>,
