@@ -1,7 +1,8 @@
 import { createConnection, type Socket } from 'node:net';
 import { BeanstalkdResponseParser } from './beanstalkd-response-parser';
-import { type StatsResult, stats } from './commands';
+import { PutParams, type StatsResult, put, stats } from './commands';
 import type { BeanstalkdResponse } from './responses';
+import { InsertedResponse } from './responses/inserted-response';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -13,6 +14,15 @@ type ResponseHandler = (response: BeanstalkdResponse) => void;
 export class BeanstalkdClient {
   readonly host: string;
   readonly port: number;
+
+  /** default job priority (default: 1024) */
+  defaultPriority = 1024;
+
+  /** default put delay in seconds (default: 0) */
+  defaultDelay = 0;
+
+  /** default time-to-run value (default: 60 seconds) */
+  defaultTtr = 60;
 
   private connection: Socket | null = null;
   private parser = new BeanstalkdResponseParser();
@@ -52,6 +62,26 @@ export class BeanstalkdClient {
     });
   }
 
+  async put(
+    payload: string,
+    opts?: Partial<Omit<PutParams, 'data'>>,
+  ): Promise<InsertedResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) return reject(new Error('not connected'));
+
+      this.queue.push((response) => resolve(put.handle(response)));
+
+      this.connection.write(
+        put.compose({
+          data: payload,
+          pri: opts?.pri ?? this.defaultPriority,
+          delay: opts?.delay ?? this.defaultDelay,
+          ttr: opts?.ttr ?? this.defaultTtr,
+        }),
+      );
+    });
+  }
+
   async stats(): Promise<StatsResult> {
     return new Promise((resolve, reject) => {
       if (!this.connection) return reject(new Error('not connected'));
@@ -71,6 +101,10 @@ async function main() {
   const result = await client.stats();
 
   console.log('stats result:', result);
+
+  const putResult = await client.put('deneme');
+
+  console.log('put result:', putResult);
 
   await client.close();
 }

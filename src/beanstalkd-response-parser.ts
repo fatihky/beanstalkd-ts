@@ -4,6 +4,7 @@
  */
 import { BeanstalkdResponseOk } from './responses';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
+import { InsertedResponse } from './responses/inserted-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -18,6 +19,9 @@ export class BeanstalkdResponseParser {
     // so first try to parse that, otherwise try the other responses.
     if (bufStartsWith(data, BeanstalkdResponseOk.prefix))
       return this.handleParseResult(data, BeanstalkdResponseOk.parse(data));
+
+    if (bufStartsWith(data, InsertedResponse.prefix))
+      return this.handleParseResult(data, InsertedResponse.parse(data));
 
     return null;
   }
