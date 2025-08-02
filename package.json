@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "description": "Beanstalkd client with full typescript support and automatic json encode/decode (optional)",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
     "test": "vitest"
   },
+  "files": [
+    "./dist"
+  ],
   "keywords": [],
   "author": "Fatih Kaya <1994274@gmail.com>",
   "license": "MIT",
