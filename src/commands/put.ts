@@ -1,4 +1,5 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
+import { BuriedError } from '../errors/buried-error';
 import { ExpectedCrlfError } from '../errors/expected-crlf-error';
 import type { BeanstalkdResponse } from '../responses';
 import { BuriedResponse } from '../responses/buried-response';
@@ -31,11 +32,10 @@ export class PutCommand extends BeanstalkdCommand<
   }
 
   override handle(response: BeanstalkdResponse): InsertedResponse {
-    if (
-      response instanceof InsertedResponse ||
-      response instanceof BuriedResponse
-    )
-      return response;
+    if (response instanceof InsertedResponse) return response;
+
+    if (response instanceof BuriedResponse)
+      throw new BuriedError(response.jobId);
 
     if (response instanceof ExpectedCrlfResponse) {
       throw new ExpectedCrlfError();
