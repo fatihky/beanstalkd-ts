@@ -1,0 +1,21 @@
+{
+  "name": "beanstalkd-ts",
+  "version": "0.1.0",
+  "description": "Beanstalkd client with full typescript support and automatic json encode/decode (optional)",
+  "main": "dist/index.js",
+  "scripts": {
+    "format": "biome format --write .",
+    "lint": "biome lint --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "@biomejs/biome": "^2.1.3",
+    "@types/node": "^24.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
