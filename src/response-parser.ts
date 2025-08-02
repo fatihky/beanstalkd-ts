@@ -15,6 +15,7 @@ import {
   JobBuriedResponse,
   JobTooBigResponse,
   NotFoundResponse,
+  NotIgnoredResponse,
   OkResponse,
   OutOfMemoryResponse,
   PausedResponse,
@@ -23,6 +24,7 @@ import {
   TimedOutResponse,
   UnknownCommandResponse,
   UsingTubeResponse,
+  WatchingResponse,
 } from './responses';
 import { bufStartsWith } from './utils';
 
@@ -66,6 +68,8 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, JobTooBigResponse);
     if (bufStartsWith(data, NotFoundResponse.raw))
       return this.handleConstantResponse(data, NotFoundResponse);
+    if (bufStartsWith(data, NotIgnoredResponse.raw))
+      return this.handleConstantResponse(data, NotIgnoredResponse);
     if (bufStartsWith(data, OutOfMemoryResponse.raw))
       return this.handleConstantResponse(data, OutOfMemoryResponse);
     if (bufStartsWith(data, PausedResponse.raw))
@@ -78,6 +82,8 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, UnknownCommandResponse);
     if (bufStartsWith(data, UsingTubeResponse.prefix))
       return this.handleParseResult(data, UsingTubeResponse.parse(data));
+    if (bufStartsWith(data, WatchingResponse.prefix))
+      return this.handleParseResult(data, WatchingResponse.parse(data));
 
     // wait for more data
     this.buf = data;

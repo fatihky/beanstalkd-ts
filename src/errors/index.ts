@@ -7,6 +7,7 @@ export * from './expected-crlf-error';
 export * from './job-buried-error';
 export * from './job-too-big-error';
 export * from './not-found-error';
+export * from './not-ignored-error';
 export * from './out-of-memory-error';
 export * from './timed-out-error';
 export * from './unknown-command-error';

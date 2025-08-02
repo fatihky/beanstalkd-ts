@@ -5,6 +5,7 @@ import {
   BeanstalkdInternalError,
   DeadlineSoonError,
   NotFoundError,
+  NotIgnoredError,
   OutOfMemoryError,
   TimedOutError,
   UnkownCommandError,
@@ -14,6 +15,7 @@ import {
   DeadlineSoonResponse,
   InternalErrorResponse,
   NotFoundResponse,
+  NotIgnoredResponse,
   OutOfMemoryResponse,
   TimedOutResponse,
   UnknownCommandResponse,
@@ -33,6 +35,9 @@ describe('beanstalkd client tests', () => {
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new NotFoundResponse()),
     ).toBeInstanceOf(NotFoundError);
+    expect(
+      BeanstalkdClient.handleGenericErrorResponse(new NotIgnoredResponse()),
+    ).toBeInstanceOf(NotIgnoredError);
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new OutOfMemoryResponse()),
     ).toBeInstanceOf(OutOfMemoryError);

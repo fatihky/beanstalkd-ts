@@ -3,16 +3,18 @@ import {
   type BeanstalkdCommand,
   bury,
   del,
+  ignore,
+  type PutParams,
   pauseTube,
   put,
-  type PutParams,
   release,
   reserve,
   reserveJob,
   reserveWithTimeout,
-  stats,
   type StatsResult,
+  stats,
   use,
+  watch,
 } from './commands';
 import {
   BadFormatError,
@@ -20,6 +22,7 @@ import {
   DeadlineSoonError,
   JobBuriedError,
   NotFoundError,
+  NotIgnoredError,
   OutOfMemoryError,
   TimedOutError,
   UnkownCommandError,
@@ -34,12 +37,14 @@ import {
   InternalErrorResponse,
   JobBuriedResponse,
   NotFoundResponse,
+  NotIgnoredResponse,
   OutOfMemoryResponse,
   type PausedResponse,
   type ReservedResponse,
   TimedOutResponse,
   UnknownCommandResponse,
   type UsingTubeResponse,
+  type WatchingResponse,
 } from './responses';
 
 interface BeanstalkdClientParams {
@@ -83,6 +88,7 @@ export class BeanstalkdClient {
     if (response instanceof JobBuriedResponse)
       return new JobBuriedError(response.jobId);
     if (response instanceof NotFoundResponse) return new NotFoundError();
+    if (response instanceof NotIgnoredResponse) return new NotIgnoredError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
     if (response instanceof TimedOutResponse) return new TimedOutError();
     if (response instanceof UnknownCommandResponse)
@@ -137,6 +143,13 @@ export class BeanstalkdClient {
    */
   async deleteJob(jobId: number): Promise<DeletedResponse> {
     return this.runCommand(del, jobId);
+  }
+
+  /**
+   * Ignore/Unwatch a tube
+   */
+  async ignore(tube: string): Promise<WatchingResponse> {
+    return this.runCommand(ignore, tube);
   }
 
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
@@ -202,6 +215,13 @@ export class BeanstalkdClient {
 
   async use(tube: string): Promise<UsingTubeResponse> {
     return this.tubeCommand(use, tube);
+  }
+
+  /**
+   * Watch a tube
+   */
+  async watch(tube: string): Promise<WatchingResponse> {
+    return this.runCommand(watch, tube);
   }
 
   private runCommand<A, T>(cmd: BeanstalkdCommand<T, A>, arg: A): Promise<T> {

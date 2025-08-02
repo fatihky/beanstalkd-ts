@@ -9,17 +9,29 @@ async function main() {
 
   console.log('stats result:', result);
 
-  const putResult = await client.put('deneme');
-
-  console.log('put result:', putResult);
-
   const useResult = await client.use('deneme');
 
   console.log('use result:', useResult);
 
+  const putResult = await client.put('deneme');
+
+  console.log('put result:', putResult);
+
+  const watchResult = await client.watch('deneme');
+
+  console.log('watch result:', watchResult);
+
+  const ignoreResult = await client.ignore('default');
+
+  console.log('ignore result:', ignoreResult);
+
   const reserveResult = await client.reserve();
 
   console.log('reserve result:', reserveResult);
+
+  await client.put('deneme');
+  await client.put('deneme');
+  await client.put('deneme');
 
   const reserveWithTimeoutResult = await client.reserveWithTimeout(10);
 

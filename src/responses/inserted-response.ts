@@ -1,5 +1,5 @@
 import { BeanstalkdResponse } from './beanstalkd-response';
-import { handleParseResponseWithId } from './utils/parse-response-with-id';
+import { handleParseResponseWithInt } from './utils/parse-response-with-int';
 
 const prefix = Buffer.from('INSERTED ');
 
@@ -17,6 +17,6 @@ export class InsertedResponse extends BeanstalkdResponse {
     | [InsertedResponse, Buffer]
     // more data must be received
     | null {
-    return handleParseResponseWithId(InsertedResponse, input, prefix);
+    return handleParseResponseWithInt(InsertedResponse, input, prefix);
   }
 }

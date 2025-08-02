@@ -1,5 +1,6 @@
 import { BuryCommand } from './bury';
 import { DeleteCommand } from './delete';
+import { IgnoreCommand } from './ignore';
 import { PauseTubeCommand } from './pause-tube';
 import { PutCommand } from './put';
 import { ReleaseCommand } from './release';
@@ -8,6 +9,7 @@ import { ReserveJobCommand } from './reserve-job';
 import { ReserveWithTimeoutCommand } from './reserve-with-timeout';
 import { StatsCommand } from './stats';
 import { UseCommand } from './use';
+import { WatchCommand } from './watch';
 
 export * from './bury';
 export * from './command';
@@ -20,9 +22,11 @@ export * from './reserve-job';
 export * from './reserve-with-timeout';
 export * from './stats';
 export * from './use';
+export * from './watch';
 
 export const bury = new BuryCommand();
 export const del = new DeleteCommand();
+export const ignore = new IgnoreCommand();
 export const pauseTube = new PauseTubeCommand();
 export const put = new PutCommand();
 export const release = new ReleaseCommand();
@@ -31,3 +35,4 @@ export const reserveJob = new ReserveJobCommand();
 export const reserveWithTimeout = new ReserveWithTimeoutCommand();
 export const stats = new StatsCommand();
 export const use = new UseCommand();
+export const watch = new WatchCommand();

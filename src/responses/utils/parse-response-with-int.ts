@@ -1,12 +1,12 @@
 import { BeanstalkdProtocolError } from '../../beanstalkd-protocol-error';
 import { bufStartsWith, crlf } from '../../utils';
 
-export function parseResponseWithId(
+export function parseResponseWithInt(
   input: Buffer,
   prefix: Buffer,
-): // id
+): // int
   | number
-  // [id, remaining bytes]
+  // [int, remaining bytes]
   | [number, Buffer]
   // should read more data
   | null {
@@ -21,26 +21,26 @@ export function parseResponseWithId(
 
   if (crlfIndex < 0) throw new BeanstalkdProtocolError('No crlf found');
 
-  const idBytes = input.toString('ascii', prefix.length, crlfIndex);
-  const id = Number(idBytes);
+  const intBytes = input.toString('ascii', prefix.length, crlfIndex);
+  const int = Number(intBytes);
 
-  if (Number.isNaN(id))
+  if (Number.isNaN(int))
     throw new BeanstalkdProtocolError(
-      `Got invalid job id: ${JSON.stringify(idBytes.toString())}`,
+      `Got invalid job int: ${JSON.stringify(intBytes.toString())}`,
     );
 
-  // return only the job id if no more data
-  if (input.length === crlfIndex + crlf.byteLength) return id;
+  // return only the int value if no more data
+  if (input.length === crlfIndex + crlf.byteLength) return int;
 
-  return [id, input.subarray(crlfIndex + crlf.byteLength)];
+  return [int, input.subarray(crlfIndex + crlf.byteLength)];
 }
 
-export function handleParseResponseWithId<T>(
-  cons: new (jobId: number) => T,
+export function handleParseResponseWithInt<T>(
+  cons: new (int: number) => T,
   buf: Buffer,
   prefix: Buffer,
 ): T | [T, Buffer] | null {
-  const result = parseResponseWithId(buf, prefix);
+  const result = parseResponseWithInt(buf, prefix);
 
   if (result === null) return null;
 
