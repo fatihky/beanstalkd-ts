@@ -14,6 +14,7 @@ import {
   JobTooBigResponse,
   OkResponse,
   OutOfMemoryResponse,
+  ReservedResponse,
   TimedOutResponse,
   UnknownCommandResponse,
   UsingTubeResponse,
@@ -36,12 +37,14 @@ export class BeanstalkdResponseParser {
     if (bufStartsWith(data, InsertedResponse.prefix))
       return this.handleParseResult(data, InsertedResponse.parse(data));
 
-    if (bufStartsWith(data, BuriedResponse.prefix))
-      return this.handleParseResult(data, BuriedResponse.parse(data));
+    if (bufStartsWith(data, ReservedResponse.prefix))
+      return this.handleParseResult(data, ReservedResponse.parse(data));
 
     // rest of responses are alphabetilcally sorted
     if (bufStartsWith(data, BadFormatResponse.prefix))
       return this.handleParseResult(data, BadFormatResponse.parse(data));
+    if (bufStartsWith(data, BuriedResponse.prefix))
+      return this.handleParseResult(data, BuriedResponse.parse(data));
     if (bufStartsWith(data, DeadlineSoonResponse.prefix))
       return this.handleParseResult(data, DeadlineSoonResponse.parse(data));
     if (bufStartsWith(data, DrainingResponse.prefix))

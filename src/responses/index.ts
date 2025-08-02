@@ -9,6 +9,7 @@ export * from './internal-error-response';
 export * from './job-too-big-response';
 export * from './ok-response';
 export * from './out-of-memory-response';
+export * from './reserved-response';
 export * from './timed-out-response';
 export * from './unknown-command-response';
 export * from './using-tube-response';
