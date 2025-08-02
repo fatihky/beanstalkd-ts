@@ -2,17 +2,22 @@
  * Beanstalkd protocol parser
  * Parses beanstalkd's responses
  */
-import { DrainingResponse, OkResponse, UsingTubeResponse } from './responses';
-import { BadFormatResponse } from './responses/bad-format-response';
-import { BeanstalkdResponse } from './responses/beanstalkd-response';
-import { BuriedResponse } from './responses/buried-response';
-import { DeadlineSoonResponse } from './responses/deadline-soon-response';
-import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
-import { InsertedResponse } from './responses/inserted-response';
-import { InternalErrorResponse } from './responses/internal-error-response';
-import { JobTooBigResponse } from './responses/job-too-big-response';
-import { OutOfMemoryResponse } from './responses/out-of-memory-response';
-import { UnknownCommandResponse } from './responses/unknown-command-response';
+import {
+  BadFormatResponse,
+  BeanstalkdResponse,
+  BuriedResponse,
+  DeadlineSoonResponse,
+  DrainingResponse,
+  ExpectedCrlfResponse,
+  InsertedResponse,
+  InternalErrorResponse,
+  JobTooBigResponse,
+  OkResponse,
+  OutOfMemoryResponse,
+  TimedOutResponse,
+  UnknownCommandResponse,
+  UsingTubeResponse,
+} from './responses';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -49,6 +54,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, JobTooBigResponse.parse(data));
     if (bufStartsWith(data, OutOfMemoryResponse.prefix))
       return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
+    if (bufStartsWith(data, TimedOutResponse.prefix))
+      return this.handleParseResult(data, TimedOutResponse.parse(data));
     if (bufStartsWith(data, UnknownCommandResponse.prefix))
       return this.handleParseResult(data, UnknownCommandResponse.parse(data));
     if (bufStartsWith(data, UsingTubeResponse.prefix))

@@ -6,4 +6,5 @@ export * from './draining-error';
 export * from './expected-crlf-error';
 export * from './job-too-big-error';
 export * from './out-of-memory-error';
+export * from './timed-out-error';
 export * from './unknown-command-error';
