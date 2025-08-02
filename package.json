@@ -9,7 +9,7 @@
     "test": "vitest"
   },
   "keywords": [],
-  "author": "",
+  "author": "Fatih Kaya <1994274@gmail.com>",
   "license": "MIT",
   "packageManager": "pnpm@10.14.0",
   "devDependencies": {
