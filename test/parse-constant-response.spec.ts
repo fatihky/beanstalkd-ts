@@ -1,14 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { ConstantResponse } from '../src/responses/utils/constant-response';
 import assert from 'node:assert';
+import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
+import { parseConstantResponse } from '../src/responses/utils/parse-constant-response';
 
-describe('constant response', () => {
+class ConstantResponse {}
+
+describe('parse constant response', () => {
   const someResponse = Buffer.from('SOME_RESPONSE\r\n');
 
   it('should parse constant response', () => {
     const input = Buffer.from('SOME_RESPONSE\r\n');
-    const result = ConstantResponse.parse(input, someResponse);
+    const result = parseConstantResponse(ConstantResponse, input, someResponse);
 
     expect(result).toBeInstanceOf(ConstantResponse);
   });
@@ -20,12 +22,14 @@ describe('constant response', () => {
 
     let buf: Buffer<ArrayBufferLike> = input1;
 
-    expect(ConstantResponse.parse(buf, someResponse)).toBeNull();
+    expect(
+      parseConstantResponse(ConstantResponse, buf, someResponse),
+    ).toBeNull();
 
     buf = Buffer.concat([buf, input2]);
 
     // first command must be parsed and remaining bytes must be returned
-    const result = ConstantResponse.parse(buf, someResponse);
+    const result = parseConstantResponse(ConstantResponse, buf, someResponse);
 
     expect(result).toBeInstanceOf(Array); // tuple must be returned
     assert(Array.isArray(result));
@@ -35,18 +39,20 @@ describe('constant response', () => {
     buf = remaining;
 
     // the second command still not complete, so null gets returned
-    expect(ConstantResponse.parse(buf, someResponse)).toBeNull();
+    expect(
+      parseConstantResponse(ConstantResponse, buf, someResponse),
+    ).toBeNull();
 
     buf = Buffer.concat([buf, input3]);
 
-    const result2 = ConstantResponse.parse(buf, someResponse);
+    const result2 = parseConstantResponse(ConstantResponse, buf, someResponse);
 
     expect(result2).toBeInstanceOf(ConstantResponse);
   });
 
   it('should parse constant response and return remaining bytes', () => {
     const input = Buffer.from('SOME_RESPONSE\r\nextra');
-    const result = ConstantResponse.parse(input, someResponse);
+    const result = parseConstantResponse(ConstantResponse, input, someResponse);
 
     expect(result).toBeInstanceOf(Array);
     expect(result).toHaveLength(2);
@@ -59,8 +65,8 @@ describe('constant response', () => {
   it('should throw protocol error if got invalid input', () => {
     const input = Buffer.from('invalid input'.repeat(3));
 
-    expect(() => ConstantResponse.parse(input, someResponse)).toThrowError(
-      BeanstalkdProtocolError,
-    );
+    expect(() =>
+      parseConstantResponse(ConstantResponse, input, someResponse),
+    ).toThrowError(BeanstalkdProtocolError);
   });
 });
