@@ -2,7 +2,7 @@
  * Beanstalkd protocol parser
  * Parses beanstalkd's responses
  */
-import { DrainingResponse, OkResponse } from './responses';
+import { DrainingResponse, OkResponse, UsingTubeResponse } from './responses';
 import { BadFormatResponse } from './responses/bad-format-response';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
@@ -48,6 +48,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
     if (bufStartsWith(data, UnknownCommandResponse.prefix))
       return this.handleParseResult(data, UnknownCommandResponse.parse(data));
+    if (bufStartsWith(data, UsingTubeResponse.prefix))
+      return this.handleParseResult(data, UsingTubeResponse.parse(data));
 
     // wait for more data
     this.buf = data;

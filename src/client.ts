@@ -1,11 +1,11 @@
 import { createConnection, type Socket } from 'node:net';
-import { put, stats, type PutParams, type StatsResult } from './commands';
+import { type PutParams, put, type StatsResult, stats, use } from './commands';
 import { BadFormatError } from './errors/bad-format-error';
 import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
 import { OutOfMemoryError } from './errors/out-of-memory-error';
 import { UnkownCommandError } from './errors/unknown-command-error';
 import { BeanstalkdResponseParser } from './response-parser';
-import type { BeanstalkdResponse } from './responses';
+import type { BeanstalkdResponse, UsingTubeResponse } from './responses';
 import { BadFormatResponse } from './responses/bad-format-response';
 import type { InsertedResponse } from './responses/inserted-response';
 import { InternalErrorResponse } from './responses/internal-error-response';
@@ -125,6 +125,20 @@ export class BeanstalkdClient {
       );
 
       this.connection.write(stats.compose());
+    });
+  }
+
+  async use(tube: string): Promise<UsingTubeResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) return reject(new Error('not connected'));
+
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(use.handle(response)),
+      );
+
+      this.connection.write(use.compose(tube));
     });
   }
 }

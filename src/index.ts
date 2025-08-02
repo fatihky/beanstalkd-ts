@@ -13,6 +13,10 @@ async function main() {
 
   console.log('put result:', putResult);
 
+  const useResult = await client.use('deneme');
+
+  console.log('use result:', useResult);
+
   await client.close();
 }
 
