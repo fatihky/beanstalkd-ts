@@ -5,6 +5,8 @@ import { BeanstalkdResponseParser } from './response-parser';
 import type { BeanstalkdResponse } from './responses';
 import type { InsertedResponse } from './responses/inserted-response';
 import { OutOfMemoryResponse } from './responses/out-of-memory-response';
+import { InternalErrorResponse } from './responses/internal-error-response';
+import { BeanstalkdInternalError } from './errors/internal-error';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -39,6 +41,8 @@ export class BeanstalkdClient {
   static handleGenericErrorResponse(
     response: BeanstalkdResponse,
   ): Error | null {
+    if (response instanceof InternalErrorResponse)
+      return new BeanstalkdInternalError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
 
     return null;
