@@ -2,7 +2,7 @@
  * Beanstalkd protocol parser
  * Parses beanstalkd's responses
  */
-import { OkResponse } from './responses';
+import { DrainingResponse, OkResponse } from './responses';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
 import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
@@ -30,6 +30,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, BuriedResponse.parse(data));
 
     // rest of responses are alphabetilcally sorted
+    if (bufStartsWith(data, DrainingResponse.prefix))
+      return this.handleParseResult(data, DrainingResponse.parse(data));
     if (bufStartsWith(data, ExpectedCrlfResponse.prefix))
       return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
     if (bufStartsWith(data, JobTooBigResponse.prefix))

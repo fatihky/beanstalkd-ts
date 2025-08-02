@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { JobTooBigResponse } from '../../src/responses/job-too-big-response';
+import { JobTooBigResponse } from '../../src/responses';
 
 describe('job too big response', () => {
   it('should parse job too big response', () => {

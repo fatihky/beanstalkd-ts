@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdResponseParser } from '../../src/response-parser';
-import { InsertedResponse } from '../../src/responses/inserted-response';
+import { InsertedResponse } from '../../src/responses';
 
 describe('inserted response', () => {
   it('should parse inserted response', () => {
