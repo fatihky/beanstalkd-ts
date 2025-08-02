@@ -12,6 +12,7 @@ import {
   InsertedResponse,
   InternalErrorResponse,
   JobTooBigResponse,
+  NotFoundResponse,
   OkResponse,
   OutOfMemoryResponse,
   ReservedResponse,
@@ -55,6 +56,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
     if (bufStartsWith(data, JobTooBigResponse.prefix))
       return this.handleParseResult(data, JobTooBigResponse.parse(data));
+    if (bufStartsWith(data, NotFoundResponse.prefix))
+      return this.handleParseResult(data, NotFoundResponse.parse(data));
     if (bufStartsWith(data, OutOfMemoryResponse.prefix))
       return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
     if (bufStartsWith(data, TimedOutResponse.prefix))

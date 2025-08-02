@@ -4,6 +4,7 @@ import {
   BadFormatError,
   BeanstalkdInternalError,
   DeadlineSoonError,
+  NotFoundError,
   OutOfMemoryError,
   TimedOutError,
   UnkownCommandError,
@@ -12,6 +13,7 @@ import {
   BadFormatResponse,
   DeadlineSoonResponse,
   InternalErrorResponse,
+  NotFoundResponse,
   OutOfMemoryResponse,
   TimedOutResponse,
   UnknownCommandResponse,
@@ -28,6 +30,9 @@ describe('beanstalkd client tests', () => {
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new InternalErrorResponse()),
     ).toBeInstanceOf(BeanstalkdInternalError);
+    expect(
+      BeanstalkdClient.handleGenericErrorResponse(new NotFoundResponse()),
+    ).toBeInstanceOf(NotFoundError);
     expect(
       BeanstalkdClient.handleGenericErrorResponse(new OutOfMemoryResponse()),
     ).toBeInstanceOf(OutOfMemoryError);

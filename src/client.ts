@@ -1,25 +1,26 @@
 import { createConnection, type Socket } from 'node:net';
 import {
+  type PutParams,
   put,
   reserve,
   reserveJob,
   reserveWithTimeout,
+  type StatsResult,
   stats,
   use,
-  type PutParams,
-  type StatsResult,
 } from './commands';
-import { DeadlineSoonError, TimedOutError } from './errors';
+import { DeadlineSoonError, NotFoundError, TimedOutError } from './errors';
 import { BadFormatError } from './errors/bad-format-error';
 import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
 import { OutOfMemoryError } from './errors/out-of-memory-error';
 import { UnkownCommandError } from './errors/unknown-command-error';
 import { BeanstalkdResponseParser } from './response-parser';
 import {
-  DeadlineSoonResponse,
-  ReservedResponse,
-  TimedOutResponse,
   type BeanstalkdResponse,
+  DeadlineSoonResponse,
+  NotFoundResponse,
+  type ReservedResponse,
+  TimedOutResponse,
   type UsingTubeResponse,
 } from './responses';
 import { BadFormatResponse } from './responses/bad-format-response';
@@ -66,6 +67,7 @@ export class BeanstalkdClient {
       return new DeadlineSoonError();
     if (response instanceof InternalErrorResponse)
       return new BeanstalkdInternalError();
+    if (response instanceof NotFoundResponse) return new NotFoundError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
     if (response instanceof TimedOutResponse) return new TimedOutError();
     if (response instanceof UnknownCommandResponse)
