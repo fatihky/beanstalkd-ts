@@ -1,3 +1,3 @@
-export * from './BeanstalkdResponse';
-export * from './BeanstalkdResponseDraining';
-export * from './BeanstalkdResponseOk';
+export * from './beanstalkd-response';
+export * from './beanstalkd-response-draining';
+export * from './beanstalkd-response-ok';

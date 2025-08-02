@@ -1,6 +1,6 @@
 import { BeanstalkdProtocolError } from '../beanstalkd-protocol-error';
 import { bufEndsWith, crlf } from '../utils';
-import { BeanstalkdResponse } from './BeanstalkdResponse';
+import { BeanstalkdResponse } from './beanstalkd-response';
 
 const okPrefix = Buffer.from('OK ');
 

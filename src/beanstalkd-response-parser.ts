@@ -3,7 +3,7 @@
  * Parses beanstalkd's responses
  */
 import { BeanstalkdResponseOk } from './response';
-import { BeanstalkdResponse } from './response/BeanstalkdResponse';
+import { BeanstalkdResponse } from './response/beanstalkd-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
