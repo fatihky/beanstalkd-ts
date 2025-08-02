@@ -30,7 +30,7 @@ describe('ok response', () => {
     expect(result).instanceOf(BeanstalkdResponseOk);
   });
 
-  it('parse ok response if partially received to commands', () => {
+  it('parse ok response if partially received two commands', () => {
     const parser = new BeanstalkdResponseParser();
     const input1 = Buffer.from('OK 12\r\n');
     const input2 = Buffer.from('beanstalkd-ts\r\nOK 12\r\n'); // also contains next response's header
