@@ -2,6 +2,7 @@ import { createConnection, type Socket } from 'node:net';
 import {
   put,
   reserve,
+  reserveJob,
   reserveWithTimeout,
   stats,
   use,
@@ -143,6 +144,20 @@ export class BeanstalkdClient {
       );
 
       this.connection.write(reserve.compose());
+    });
+  }
+
+  async reserveJob(jobId: number): Promise<ReservedResponse> {
+    return new Promise((resolve, reject) => {
+      if (!this.connection) return reject(new Error('not connected'));
+
+      this.queue.push((response) =>
+        response instanceof Error
+          ? reject(response)
+          : resolve(reserveJob.handle(response)),
+      );
+
+      this.connection.write(reserveJob.compose(jobId));
     });
   }
 
