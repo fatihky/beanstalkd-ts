@@ -44,32 +44,32 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, ReservedResponse.parse(data));
 
     // rest of responses are alphabetilcally sorted
-    if (bufStartsWith(data, BadFormatResponse.prefix))
-      return this.handleParseResult(data, BadFormatResponse.parse(data));
+    if (bufStartsWith(data, BadFormatResponse.raw))
+      return this.handleConstantResponse(data, BadFormatResponse);
     if (bufStartsWith(data, BuriedResponse.prefix))
       return this.handleParseResult(data, BuriedResponse.parse(data));
-    if (bufStartsWith(data, DeadlineSoonResponse.prefix))
-      return this.handleParseResult(data, DeadlineSoonResponse.parse(data));
-    if (bufStartsWith(data, DrainingResponse.prefix))
-      return this.handleParseResult(data, DrainingResponse.parse(data));
-    if (bufStartsWith(data, DeletedResponse.prefix))
-      return this.handleParseResult(data, DeletedResponse.parse(data));
-    if (bufStartsWith(data, InternalErrorResponse.prefix))
-      return this.handleParseResult(data, InternalErrorResponse.parse(data));
-    if (bufStartsWith(data, ExpectedCrlfResponse.prefix))
-      return this.handleParseResult(data, ExpectedCrlfResponse.parse(data));
-    if (bufStartsWith(data, JobTooBigResponse.prefix))
-      return this.handleParseResult(data, JobTooBigResponse.parse(data));
-    if (bufStartsWith(data, NotFoundResponse.prefix))
-      return this.handleParseResult(data, NotFoundResponse.parse(data));
-    if (bufStartsWith(data, OutOfMemoryResponse.prefix))
-      return this.handleParseResult(data, OutOfMemoryResponse.parse(data));
-    if (bufStartsWith(data, PausedResponse.prefix))
-      return this.handleParseResult(data, PausedResponse.parse(data));
-    if (bufStartsWith(data, TimedOutResponse.prefix))
-      return this.handleParseResult(data, TimedOutResponse.parse(data));
-    if (bufStartsWith(data, UnknownCommandResponse.prefix))
-      return this.handleParseResult(data, UnknownCommandResponse.parse(data));
+    if (bufStartsWith(data, DeadlineSoonResponse.raw))
+      return this.handleConstantResponse(data, DeadlineSoonResponse);
+    if (bufStartsWith(data, DrainingResponse.raw))
+      return this.handleConstantResponse(data, DrainingResponse);
+    if (bufStartsWith(data, DeletedResponse.raw))
+      return this.handleConstantResponse(data, DeletedResponse);
+    if (bufStartsWith(data, InternalErrorResponse.raw))
+      return this.handleConstantResponse(data, InternalErrorResponse);
+    if (bufStartsWith(data, ExpectedCrlfResponse.raw))
+      return this.handleConstantResponse(data, ExpectedCrlfResponse);
+    if (bufStartsWith(data, JobTooBigResponse.raw))
+      return this.handleConstantResponse(data, JobTooBigResponse);
+    if (bufStartsWith(data, NotFoundResponse.raw))
+      return this.handleConstantResponse(data, NotFoundResponse);
+    if (bufStartsWith(data, OutOfMemoryResponse.raw))
+      return this.handleConstantResponse(data, OutOfMemoryResponse);
+    if (bufStartsWith(data, PausedResponse.raw))
+      return this.handleConstantResponse(data, PausedResponse);
+    if (bufStartsWith(data, TimedOutResponse.raw))
+      return this.handleConstantResponse(data, TimedOutResponse);
+    if (bufStartsWith(data, UnknownCommandResponse.raw))
+      return this.handleConstantResponse(data, UnknownCommandResponse);
     if (bufStartsWith(data, UsingTubeResponse.prefix))
       return this.handleParseResult(data, UsingTubeResponse.parse(data));
 
@@ -77,6 +77,19 @@ export class BeanstalkdResponseParser {
     this.buf = data;
 
     return null;
+  }
+
+  private handleConstantResponse<T extends BeanstalkdResponse>(
+    buf: Buffer,
+    cons: (new () => T) & { raw: Buffer },
+  ): T | [T, Buffer] {
+    if (buf.byteLength === cons.raw.byteLength) {
+      return new cons();
+    }
+
+    const remaining = buf.subarray(cons.raw.byteLength);
+
+    return [new cons(), remaining];
   }
 
   private handleParseResult(
