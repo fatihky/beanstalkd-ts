@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
 import { BeanstalkdResponseParser } from '../src/beanstalkd-response-parser';
-import { BeanstalkdResponseOk } from '../src/response';
+import { BeanstalkdResponseOk } from '../src/responses';
 
 /**
  * test beanstalkd's ok response parser

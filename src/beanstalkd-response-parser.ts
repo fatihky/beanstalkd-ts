@@ -2,8 +2,8 @@
  * Beanstalkd protocol parser
  * Parses beanstalkd's responses
  */
-import { BeanstalkdResponseOk } from './response';
-import { BeanstalkdResponse } from './response/beanstalkd-response';
+import { BeanstalkdResponseOk } from './responses';
+import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');

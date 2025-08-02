@@ -1,4 +1,4 @@
-import type { BeanstalkdResponse } from '../response';
+import type { BeanstalkdResponse } from '../responses';
 
 export abstract class BeanstalkdCommand<T, A> {
   abstract compose(arg: A): Buffer;

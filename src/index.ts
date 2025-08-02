@@ -1,7 +1,7 @@
 import { createConnection, type Socket } from 'node:net';
 import { BeanstalkdResponseParser } from './beanstalkd-response-parser';
 import { type StatsResult, stats } from './commands';
-import type { BeanstalkdResponse } from './response';
+import type { BeanstalkdResponse } from './responses';
 
 interface BeanstalkdClientParams {
   host?: string;

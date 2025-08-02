@@ -1,5 +1,5 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, BeanstalkdResponseOk } from '../response';
+import { type BeanstalkdResponse, BeanstalkdResponseOk } from '../responses';
 import { crlf } from '../utils';
 import { BeanstalkdCommand } from './command';
 
