@@ -1,6 +1,7 @@
 import { createConnection, type Socket } from 'node:net';
 import {
   type BeanstalkdCommand,
+  del,
   pauseTube,
   put,
   type PutParams,
@@ -20,6 +21,7 @@ import { BeanstalkdResponseParser } from './response-parser';
 import {
   type BeanstalkdResponse,
   DeadlineSoonResponse,
+  DeletedResponse,
   NotFoundResponse,
   type PausedResponse,
   type ReservedResponse,
@@ -109,6 +111,13 @@ export class BeanstalkdClient {
 
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
     return this.runCommand(pauseTube, { tube, delay: delaySeconds });
+  }
+
+  /**
+   * Delete a job
+   */
+  async deleteJob(jobId: number): Promise<DeletedResponse> {
+    return this.runCommand(del, jobId);
   }
 
   /**

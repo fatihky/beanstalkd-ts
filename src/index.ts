@@ -25,6 +25,10 @@ async function main() {
 
   console.log('reserve with timeout result:', reserveWithTimeoutResult);
 
+  const delResult = await client.deleteJob(reserveWithTimeoutResult.jobId);
+
+  console.log('delete result:', delResult);
+
   const pauseTubeResult = await client.pauseTube('deneme', 10);
 
   console.log('pause tube result:', pauseTubeResult);
