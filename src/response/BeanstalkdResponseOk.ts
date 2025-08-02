@@ -54,7 +54,7 @@ export class BeanstalkdResponseOk extends BeanstalkdResponse {
     const data = dataBuf.subarray(0, dataBuf.byteLength - crlf.byteLength);
 
     if (buf.byteLength > expectedByteLength) {
-      const remaining = Buffer.from(buf, expectedByteLength);
+      const remaining = Buffer.from(buf.buffer, expectedByteLength);
 
       return [new BeanstalkdResponseOk(data), remaining];
     }

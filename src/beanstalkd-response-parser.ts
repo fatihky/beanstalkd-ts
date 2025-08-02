@@ -6,7 +6,7 @@ import { BeanstalkdResponseOk } from './response';
 import { BeanstalkdResponse } from './response/BeanstalkdResponse';
 import { bufStartsWith } from './utils';
 
-const empty = Buffer.alloc(0);
+const empty: Buffer<ArrayBufferLike> = Buffer.from('');
 
 export class BeanstalkdResponseParser {
   private buf = empty;
