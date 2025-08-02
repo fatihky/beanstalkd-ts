@@ -3,6 +3,7 @@
  * Parses beanstalkd's responses
  */
 import { DrainingResponse, OkResponse } from './responses';
+import { BadFormatResponse } from './responses/bad-format-response';
 import { BeanstalkdResponse } from './responses/beanstalkd-response';
 import { BuriedResponse } from './responses/buried-response';
 import { ExpectedCrlfResponse } from './responses/expected-crlf-response';
@@ -32,6 +33,8 @@ export class BeanstalkdResponseParser {
       return this.handleParseResult(data, BuriedResponse.parse(data));
 
     // rest of responses are alphabetilcally sorted
+    if (bufStartsWith(data, BadFormatResponse.prefix))
+      return this.handleParseResult(data, BadFormatResponse.parse(data));
     if (bufStartsWith(data, DrainingResponse.prefix))
       return this.handleParseResult(data, DrainingResponse.parse(data));
     if (bufStartsWith(data, InternalErrorResponse.prefix))

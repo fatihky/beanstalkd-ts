@@ -1,12 +1,14 @@
 import { createConnection, type Socket } from 'node:net';
 import { type PutParams, put, type StatsResult, stats } from './commands';
+import { BadFormatError } from './errors/bad-format-error';
+import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
 import { OutOfMemoryError } from './errors/out-of-memory-error';
 import { BeanstalkdResponseParser } from './response-parser';
 import type { BeanstalkdResponse } from './responses';
+import { BadFormatResponse } from './responses/bad-format-response';
 import type { InsertedResponse } from './responses/inserted-response';
-import { OutOfMemoryResponse } from './responses/out-of-memory-response';
 import { InternalErrorResponse } from './responses/internal-error-response';
-import { BeanstalkdInternalError } from './errors/internal-error';
+import { OutOfMemoryResponse } from './responses/out-of-memory-response';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -41,6 +43,7 @@ export class BeanstalkdClient {
   static handleGenericErrorResponse(
     response: BeanstalkdResponse,
   ): Error | null {
+    if (response instanceof BadFormatResponse) return new BadFormatError();
     if (response instanceof InternalErrorResponse)
       return new BeanstalkdInternalError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
