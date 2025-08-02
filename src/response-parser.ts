@@ -5,13 +5,14 @@
 import {
   BadFormatResponse,
   BeanstalkdResponse,
-  JobBuriedResponse,
+  BuriedResponse,
   DeadlineSoonResponse,
   DeletedResponse,
   DrainingResponse,
   ExpectedCrlfResponse,
   InsertedResponse,
   InternalErrorResponse,
+  JobBuriedResponse,
   JobTooBigResponse,
   NotFoundResponse,
   OkResponse,
@@ -46,6 +47,8 @@ export class BeanstalkdResponseParser {
     // rest of responses are alphabetilcally sorted
     if (bufStartsWith(data, BadFormatResponse.raw))
       return this.handleConstantResponse(data, BadFormatResponse);
+    if (bufStartsWith(data, BuriedResponse.raw))
+      return this.handleConstantResponse(data, BuriedResponse);
     if (bufStartsWith(data, JobBuriedResponse.prefix))
       return this.handleParseResult(data, JobBuriedResponse.parse(data));
     if (bufStartsWith(data, DeadlineSoonResponse.raw))

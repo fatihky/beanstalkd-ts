@@ -2,37 +2,45 @@ import { createConnection, type Socket } from 'node:net';
 import {
   type BeanstalkdCommand,
   del,
+  type PutParams,
   pauseTube,
   put,
-  type PutParams,
   reserve,
   reserveJob,
   reserveWithTimeout,
-  stats,
   type StatsResult,
+  stats,
   use,
 } from './commands';
-import { DeadlineSoonError, NotFoundError, TimedOutError } from './errors';
-import { BadFormatError } from './errors/bad-format-error';
-import { BeanstalkdInternalError } from './errors/beanstalkd-internal-error';
-import { OutOfMemoryError } from './errors/out-of-memory-error';
-import { UnkownCommandError } from './errors/unknown-command-error';
+import {
+  BadFormatError,
+  BeanstalkdInternalError,
+  BuriedError,
+  DeadlineSoonError,
+  JobBuriedError,
+  NotFoundError,
+  OutOfMemoryError,
+  TimedOutError,
+  UnkownCommandError,
+} from './errors';
 import { BeanstalkdResponseParser } from './response-parser';
 import {
+  BadFormatResponse,
   type BeanstalkdResponse,
+  BuriedResponse,
   DeadlineSoonResponse,
-  DeletedResponse,
+  type DeletedResponse,
+  type InsertedResponse,
+  InternalErrorResponse,
+  JobBuriedResponse,
   NotFoundResponse,
+  OutOfMemoryResponse,
   type PausedResponse,
   type ReservedResponse,
   TimedOutResponse,
+  UnknownCommandResponse,
   type UsingTubeResponse,
 } from './responses';
-import { BadFormatResponse } from './responses/bad-format-response';
-import type { InsertedResponse } from './responses/inserted-response';
-import { InternalErrorResponse } from './responses/internal-error-response';
-import { OutOfMemoryResponse } from './responses/out-of-memory-response';
-import { UnknownCommandResponse } from './responses/unknown-command-response';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -68,10 +76,13 @@ export class BeanstalkdClient {
     response: BeanstalkdResponse,
   ): Error | null {
     if (response instanceof BadFormatResponse) return new BadFormatError();
+    if (response instanceof BuriedResponse) return new BuriedError();
     if (response instanceof DeadlineSoonResponse)
       return new DeadlineSoonError();
     if (response instanceof InternalErrorResponse)
       return new BeanstalkdInternalError();
+    if (response instanceof JobBuriedResponse)
+      return new JobBuriedError(response.jobId);
     if (response instanceof NotFoundResponse) return new NotFoundError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
     if (response instanceof TimedOutResponse) return new TimedOutError();

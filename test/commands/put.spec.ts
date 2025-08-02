@@ -1,26 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { put } from '../../src/commands';
-import { BuriedError } from '../../src/errors/buried-error';
+import { DrainingError } from '../../src/errors/draining-error';
 import { ExpectedCrlfError } from '../../src/errors/expected-crlf-error';
-import { BuriedResponse } from '../../src/responses/buried-response';
+import { JobTooBigError } from '../../src/errors/job-too-big-error';
+import { DrainingResponse } from '../../src/responses';
 import { ExpectedCrlfResponse } from '../../src/responses/expected-crlf-response';
 import { InsertedResponse } from '../../src/responses/inserted-response';
-import { JobTooBigError } from '../../src/errors/job-too-big-error';
 import { JobTooBigResponse } from '../../src/responses/job-too-big-response';
-import { DrainingResponse } from '../../src/responses';
-import { DrainingError } from '../../src/errors/draining-error';
 
 describe('put command', () => {
   it('should handle inserted response', () => {
     const response = new InsertedResponse(1234);
 
     expect(put.handle(response)).toBeInstanceOf(InsertedResponse);
-  });
-
-  it('should throw BuriedError if got BuriedResponse', () => {
-    expect(() => put.handle(new BuriedResponse(1234))).toThrowError(
-      BuriedError,
-    );
   });
 
   it('should throw DrainingError if got DrainingResponse', () => {
