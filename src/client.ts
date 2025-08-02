@@ -1,21 +1,22 @@
 import { createConnection, type Socket } from 'node:net';
 import {
   type BeanstalkdCommand,
+  bury,
   del,
-  type PutParams,
   pauseTube,
   put,
+  type PutParams,
+  release,
   reserve,
   reserveJob,
   reserveWithTimeout,
-  type StatsResult,
   stats,
+  type StatsResult,
   use,
 } from './commands';
 import {
   BadFormatError,
   BeanstalkdInternalError,
-  BuriedError,
   DeadlineSoonError,
   JobBuriedError,
   NotFoundError,
@@ -27,7 +28,6 @@ import { BeanstalkdResponseParser } from './response-parser';
 import {
   BadFormatResponse,
   type BeanstalkdResponse,
-  BuriedResponse,
   DeadlineSoonResponse,
   type DeletedResponse,
   type InsertedResponse,
@@ -76,7 +76,6 @@ export class BeanstalkdClient {
     response: BeanstalkdResponse,
   ): Error | null {
     if (response instanceof BadFormatResponse) return new BadFormatError();
-    if (response instanceof BuriedResponse) return new BuriedError();
     if (response instanceof DeadlineSoonResponse)
       return new DeadlineSoonError();
     if (response instanceof InternalErrorResponse)
@@ -120,8 +119,17 @@ export class BeanstalkdClient {
     });
   }
 
-  async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
-    return this.runCommand(pauseTube, { tube, delay: delaySeconds });
+  /**
+   * Bury a job.
+   *
+   * This command changes the given job's status the BURIED.
+   * Jobs will not be resered through `reserve` or `reserve-with-timeout` calls.
+   */
+  async bury(jobId: number, priority?: number): Promise<DeletedResponse> {
+    return this.runCommand(bury, {
+      jobId,
+      pri: priority ?? this.defaultPriority,
+    });
   }
 
   /**
@@ -129,6 +137,10 @@ export class BeanstalkdClient {
    */
   async deleteJob(jobId: number): Promise<DeletedResponse> {
     return this.runCommand(del, jobId);
+  }
+
+  async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
+    return this.runCommand(pauseTube, { tube, delay: delaySeconds });
   }
 
   /**
@@ -147,6 +159,21 @@ export class BeanstalkdClient {
       pri: opts?.pri ?? this.defaultPriority,
       delay: opts?.delay ?? this.defaultDelay,
       ttr: opts?.ttr ?? this.defaultTtr,
+    });
+  }
+
+  /**
+   * Release a job
+   */
+  async release(
+    jobId: number,
+    priority?: number,
+    delaySeconds?: number,
+  ): Promise<DeletedResponse> {
+    return this.runCommand(release, {
+      jobId,
+      pri: priority ?? this.defaultPriority,
+      delay: delaySeconds ?? this.defaultDelay,
     });
   }
 

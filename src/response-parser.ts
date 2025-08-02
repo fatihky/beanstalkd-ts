@@ -18,6 +18,7 @@ import {
   OkResponse,
   OutOfMemoryResponse,
   PausedResponse,
+  ReleasedResponse,
   ReservedResponse,
   TimedOutResponse,
   UnknownCommandResponse,
@@ -69,6 +70,8 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, OutOfMemoryResponse);
     if (bufStartsWith(data, PausedResponse.raw))
       return this.handleConstantResponse(data, PausedResponse);
+    if (bufStartsWith(data, ReleasedResponse.raw))
+      return this.handleConstantResponse(data, ReleasedResponse);
     if (bufStartsWith(data, TimedOutResponse.raw))
       return this.handleConstantResponse(data, TimedOutResponse);
     if (bufStartsWith(data, UnknownCommandResponse.raw))

@@ -13,6 +13,7 @@ export * from './not-found-response';
 export * from './ok-response';
 export * from './out-of-memory-response';
 export * from './paused-response';
+export * from './released-response';
 export * from './reserved-response';
 export * from './timed-out-response';
 export * from './unknown-command-response';
