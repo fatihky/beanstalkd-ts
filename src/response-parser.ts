@@ -15,6 +15,7 @@ import {
   InternalErrorResponse,
   JobBuriedResponse,
   JobTooBigResponse,
+  KickedResponse,
   NotFoundResponse,
   NotIgnoredResponse,
   OkResponse,
@@ -69,6 +70,8 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, ExpectedCrlfResponse);
     if (bufStartsWith(data, JobTooBigResponse.raw))
       return this.handleConstantResponse(data, JobTooBigResponse);
+    if (bufStartsWith(data, KickedResponse.prefix))
+      return this.handleParseResult(data, KickedResponse.parse(data));
     if (bufStartsWith(data, NotFoundResponse.raw))
       return this.handleConstantResponse(data, NotFoundResponse);
     if (bufStartsWith(data, NotIgnoredResponse.raw))

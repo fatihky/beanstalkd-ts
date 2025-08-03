@@ -10,6 +10,7 @@ export * from './inserted-response';
 export * from './internal-error-response';
 export * from './job-buried-response';
 export * from './job-too-big-response';
+export * from './kicked-response';
 export * from './not-found-response';
 export * from './not-ignored-response';
 export * from './ok-response';

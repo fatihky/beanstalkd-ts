@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
 import { parseResponseWithInt } from '../src/responses/utils/parse-response-with-int';
+import { MAX_HEADER_LENGTH } from '../src/constants';
 
 describe('parse responses with id', () => {
   const prefix = Buffer.from('PREFIX ');
@@ -43,7 +44,10 @@ describe('parse responses with id', () => {
 
     expect(() =>
       // does not end with \r\n
-      parseResponseWithInt(Buffer.from('PREFIX 1234\r\r'), prefix),
+      parseResponseWithInt(
+        Buffer.from(`PREFIX 1234 ${'d'.repeat(MAX_HEADER_LENGTH)}`),
+        prefix,
+      ),
     ).toThrowError(BeanstalkdProtocolError);
   });
 

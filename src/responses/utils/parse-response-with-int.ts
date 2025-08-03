@@ -1,8 +1,12 @@
 import { BeanstalkdProtocolError } from '../../beanstalkd-protocol-error';
-import { bufStartsWith, crlf } from '../../utils';
+import {
+  bufStartsWith,
+  crlf,
+  ensureBufferMaxLengthWithoutHeader,
+} from '../../utils';
 
 export function parseResponseWithInt(
-  input: Buffer,
+  buf: Buffer,
   prefix: Buffer,
 ): // int
   | number
@@ -12,16 +16,21 @@ export function parseResponseWithInt(
   | null {
   const expectedMinimumByteLength = prefix.byteLength + 1 + crlf.byteLength;
 
-  if (input.byteLength < expectedMinimumByteLength) return null; // read more data
+  if (buf.byteLength < expectedMinimumByteLength) return null; // read more data
 
-  if (!bufStartsWith(input, prefix))
+  if (!bufStartsWith(buf, prefix))
     throw new BeanstalkdProtocolError('Invalid prefix');
 
-  const crlfIndex = input.indexOf(crlf);
+  const crlfIndex = buf.indexOf(crlf);
 
-  if (crlfIndex < 0) throw new BeanstalkdProtocolError('No crlf found');
+  if (crlfIndex < 0) {
+    // crlf was not found but do not allow headers to exceed the maximum allowed size
+    ensureBufferMaxLengthWithoutHeader(buf);
 
-  const intBytes = input.toString('ascii', prefix.length, crlfIndex);
+    return null; // read more data
+  }
+
+  const intBytes = buf.toString('ascii', prefix.length, crlfIndex);
   const int = Number(intBytes);
 
   if (Number.isNaN(int))
@@ -30,11 +39,23 @@ export function parseResponseWithInt(
     );
 
   // return only the int value if no more data
-  if (input.length === crlfIndex + crlf.byteLength) return int;
+  if (buf.length === crlfIndex + crlf.byteLength) return int;
 
-  return [int, input.subarray(crlfIndex + crlf.byteLength)];
+  return [int, buf.subarray(crlfIndex + crlf.byteLength)];
 }
 
+/**
+ * Parse beanstalkd responses with a single integer value
+ *
+ * @returns {T | [T, Buffer] | null}
+ * T => buffer contains the full response and includes no extra bytes. so you are free to discard buf
+ * [T, Buffer] => buffer contains response and some extra bytes. you must parse remaining bytes again.
+ * null => more data must be read
+ *
+ * Example responses are:
+ * - "INSERTED <id>\r\n"
+ * - "KICKED <count>\r\n"
+ */
 export function handleParseResponseWithInt<T>(
   cons: new (int: number) => T,
   buf: Buffer,

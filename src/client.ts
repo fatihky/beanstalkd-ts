@@ -4,9 +4,13 @@ import {
   bury,
   del,
   ignore,
+  kick,
   type PutParams,
   pauseTube,
   peek,
+  peekBuried,
+  peekDelayed,
+  peekReady,
   put,
   release,
   reserve,
@@ -16,9 +20,6 @@ import {
   stats,
   use,
   watch,
-  peekBuried,
-  peekDelayed,
-  peekReady,
 } from './commands';
 import {
   BadFormatError,
@@ -41,6 +42,7 @@ import {
   type InsertedResponse,
   InternalErrorResponse,
   JobBuriedResponse,
+  type KickedResponse,
   NotFoundResponse,
   NotIgnoredResponse,
   OutOfMemoryResponse,
@@ -157,6 +159,22 @@ export class BeanstalkdClient {
     return this.runCommand(ignore, tube);
   }
 
+  /**
+   * Move `n` "buried" or "delayed" jobs into the "ready" queue.
+   *
+   * @throws {NotFoundError} if the current tube does not have any "buried" or "delayed" jobs.
+   *
+   * @description
+   * From beanstalkd docs:
+   *
+   * The kick command applies only to the currently used tube. It moves jobs into
+   * the ready queue. If there are any buried jobs, it will only kick buried jobs.
+   * Otherwise it will kick delayed jobs.
+   */
+  async kick(jobCount: number): Promise<KickedResponse> {
+    return this.runCommand(kick, jobCount);
+  }
+
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
     return this.runCommand(pauseTube, { tube, delay: delaySeconds });
   }
@@ -172,7 +190,7 @@ export class BeanstalkdClient {
    * Peek/inspect a job in "buried" state
    */
   async peekBuried(): Promise<FoundResponse> {
-    return this.runCommand(peekBuried, void 0);
+    return await this.runCommand(peekBuried, void 0);
   }
 
   /**
@@ -258,16 +276,34 @@ export class BeanstalkdClient {
   }
 
   private runCommand<A, T>(cmd: BeanstalkdCommand<T, A>, arg: A): Promise<T> {
+    const notConnectedError = new Error('Not connected');
+    const originalStack = new Error().stack; // preserve the original stack trace
+
     return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
+      if (!this.connection) return reject(notConnectedError);
 
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(cmd.handle(response)),
-      );
+      let writeFailed = false;
+      const handler: ResponseHandler = (response) => {
+        if (writeFailed) return; // already rejected
 
-      this.connection.write(cmd.compose(arg));
+        if (response instanceof Error) {
+          response.stack = [originalStack, response.stack].join('\n');
+
+          reject(response);
+        } else {
+          resolve(cmd.handle(response));
+        }
+      };
+
+      this.queue.push(handler);
+
+      this.connection.write(cmd.compose(arg), (err) => {
+        if (!err) return;
+
+        writeFailed = true;
+
+        reject(err);
+      });
     });
   }
 
@@ -275,8 +311,10 @@ export class BeanstalkdClient {
     cmd: BeanstalkdCommand<T, string>,
     tube: string,
   ): Promise<T> {
+    const notConnectedError = new Error('Not connected');
+
     return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(new Error('not connected'));
+      if (!this.connection) return reject(notConnectedError);
 
       this.queue.push((response) =>
         response instanceof Error
