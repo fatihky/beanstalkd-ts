@@ -267,6 +267,24 @@ export class BeanstalkdClient {
   }
 
   /**
+   * send "quit" command to the beanstalkd server.
+   * the server will close our connection.
+   */
+  async quit() {
+    await new Promise((resolve, reject) => {
+      if (!this.connection) throw new Error('not connected');
+
+      this.connection.once('close', resolve);
+
+      this.connection.write(Buffer.from('quit\r\n'), (err) => {
+        if (err) {
+          reject(err);
+        }
+      });
+    });
+  }
+
+  /**
    * Release a job
    */
   async release(
