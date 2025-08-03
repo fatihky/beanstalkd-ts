@@ -9,6 +9,7 @@ import { YamlPayload } from './utils/yaml-payload';
  */
 export class TubeStats {
   readonly name: string;
+
   readonly cmdDelete: number;
   readonly cmdPauseTube: number;
   readonly currentJobsBuried: number;
