@@ -106,14 +106,16 @@ export class BeanstalkdResponseParser {
   private handleConstantResponse<T extends BeanstalkdResponse>(
     buf: Buffer,
     cons: (new () => T) & { raw: Buffer },
-  ): T | [T, Buffer] {
+  ): T | null {
     if (buf.byteLength === cons.raw.byteLength) {
       return new cons();
     }
 
     const remaining = buf.subarray(cons.raw.byteLength);
 
-    return [new cons(), remaining];
+    this.buf = remaining;
+
+    return new cons();
   }
 
   private handleParseResult(
