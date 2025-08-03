@@ -5,22 +5,23 @@ import {
   del,
   ignore,
   kick,
-  type PutParams,
+  kickJob,
   pauseTube,
   peek,
   peekBuried,
   peekDelayed,
   peekReady,
   put,
+  type PutParams,
   release,
   reserve,
   reserveJob,
   reserveWithTimeout,
-  type StatsResult,
   stats,
+  statsJob,
+  type StatsResult,
   use,
   watch,
-  kickJob,
 } from './commands';
 import {
   BadFormatError,
@@ -55,6 +56,7 @@ import {
   type UsingTubeResponse,
   type WatchingResponse,
 } from './responses';
+import { JobStats } from './responses/job-stats';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -276,8 +278,20 @@ export class BeanstalkdClient {
     return this.runCommand(reserveWithTimeout, timeoutSeconds);
   }
 
+  /**
+   * Get server statistics
+   */
   async stats(): Promise<StatsResult> {
     return this.runCommand(stats, void 0);
+  }
+
+  /**
+   * Get a job's statistics
+   *
+   * @throws {NotFoundError} if the job was not found.
+   */
+  async statsJob(jobId: number): Promise<JobStats> {
+    return this.runCommand(statsJob, jobId);
   }
 
   async use(tube: string): Promise<UsingTubeResponse> {
