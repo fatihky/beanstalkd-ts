@@ -22,10 +22,12 @@ const result = await client.reserveWithTimeout(10);
 await client.deleteJob(result.jobId)
 ```
 
+For the list of available commands, refer to the official beanstalkd manual: https://raw.githubusercontent.com/beanstalkd/beanstalkd/master/doc/protocol.txt
+
 ### Features
 
-* All commands and their success results are typed. (OkResponse, InsertedResponse etc..)
-* All beanstalkd errors are typed through specific classes each (NotFoundError, ExpectedCrlfError, etc..)
+* **All commands** and their success results are typed. (OkResponse, InsertedResponse etc..)
+* **All beanstalkd errors are typed** through specific classes each (NotFoundError, ExpectedCrlfError, etc..)
 * Fully unit tested.
 * Throws errors with extra call stack (preserves original call stack)
 
