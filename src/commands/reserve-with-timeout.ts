@@ -1,18 +1,22 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, ReservedResponse } from '../responses';
+import {
+  BeanstalkdJob,
+  type BeanstalkdResponse,
+  ReservedResponse,
+} from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class ReserveWithTimeoutCommand extends BeanstalkdCommand<
-  ReservedResponse,
+  BeanstalkdJob,
   number
 > {
   override compose(timeoutSeconds: number): Buffer {
     return Buffer.from(`reserve-with-timeout ${timeoutSeconds}\r\n`);
   }
 
-  override handle(response: BeanstalkdResponse): ReservedResponse {
+  override handle(response: BeanstalkdResponse): BeanstalkdJob {
     if (response instanceof ReservedResponse) {
-      return response;
+      return new BeanstalkdJob(response.jobId, response.payload);
     }
 
     throw new BeanstalkdInvalidResponseError(
