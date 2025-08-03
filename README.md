@@ -30,6 +30,33 @@ If you need to handle connection failures, you can use this method:
 client.getConnection(); // returns Socket | null
 ```
 
+#### Example worker with reserve timeout handling
+
+```ts
+import { BeanstalkdClient, BeanstalkdJob, TimedOutError } from 'beanstalkd-ts'
+
+const client = new BeanstalkdClient();
+
+for (;;) {
+  try {
+    const job: BeanstalkdJob = await this.bsClient.reserveWithTimeout(10);
+
+    // process job...
+    console.log('process job:', job.id, job.payload.toString())
+
+    // remove from the queue
+    await client.deleteJob(job.id)
+  } catch (err) {
+    if (err instanceof TimedOutError) {
+      continue; // could not reserve a job in 10 seconds. retry again.
+    }
+
+    // rethrow the original error
+    throw err;
+  }
+}
+```
+
 ### Features
 
 * **All commands** and their success results are typed. (OkResponse, InsertedResponse etc..)
