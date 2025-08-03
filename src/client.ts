@@ -20,6 +20,7 @@ import {
   stats,
   statsJob,
   type StatsResult,
+  statsTube,
   use,
   watch,
 } from './commands';
@@ -57,6 +58,7 @@ import {
   type WatchingResponse,
 } from './responses';
 import { JobStats } from './responses/job-stats';
+import { TubeStats } from './responses/tube-stats';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -292,6 +294,15 @@ export class BeanstalkdClient {
    */
   async statsJob(jobId: number): Promise<JobStats> {
     return this.runCommand(statsJob, jobId);
+  }
+
+  /**
+   * Get a tube's statistics
+   *
+   * @throws {NotFoundError} if the tube was not found.
+   */
+  async statsTube(tube: string): Promise<TubeStats> {
+    return this.runCommand(statsTube, tube);
   }
 
   async use(tube: string): Promise<UsingTubeResponse> {

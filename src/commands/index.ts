@@ -15,6 +15,7 @@ import { ReserveJobCommand } from './reserve-job';
 import { ReserveWithTimeoutCommand } from './reserve-with-timeout';
 import { StatsCommand } from './stats';
 import { StatsJobCommand } from './stats-job';
+import { StatsTubeCommand } from './stats-tube';
 import { UseCommand } from './use';
 import { WatchCommand } from './watch';
 
@@ -35,6 +36,7 @@ export * from './reserve-job';
 export * from './reserve-with-timeout';
 export * from './stats';
 export * from './stats-job';
+export * from './stats-tube';
 export * from './use';
 export * from './watch';
 
@@ -55,5 +57,6 @@ export const reserveJob = new ReserveJobCommand();
 export const reserveWithTimeout = new ReserveWithTimeoutCommand();
 export const stats = new StatsCommand();
 export const statsJob = new StatsJobCommand();
+export const statsTube = new StatsTubeCommand();
 export const use = new UseCommand();
 export const watch = new WatchCommand();
