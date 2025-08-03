@@ -46,6 +46,10 @@ client.getConnection(); // returns Socket | null
 #### Server Stats
 
 ```ts
+await client.stats()
+```
+
+```ts
 export class ServerStats {
   readonly binlogCurrentIndex: number;
   readonly binlogMaxSize: number;
@@ -104,6 +108,10 @@ export class ServerStats {
 #### Tube Stats
 
 ```ts
+await client.statsTube('tube-name')
+```
+
+```ts
 export class TubeStats {
   readonly name: string;
 
@@ -124,6 +132,10 @@ export class TubeStats {
 ```
 
 #### Job Stats
+
+```ts
+await client.statsJob(123)
+```
 
 ```ts
 export class JobStats {
