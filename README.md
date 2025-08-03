@@ -24,6 +24,12 @@ await client.deleteJob(result.jobId)
 
 For the list of available commands, refer to the official beanstalkd manual: https://raw.githubusercontent.com/beanstalkd/beanstalkd/master/doc/protocol.txt
 
+If you need to handle connection failures, you can use this method:
+
+```ts
+client.getConnection(); // returns Socket | null
+```
+
 ### Features
 
 * **All commands** and their success results are typed. (OkResponse, InsertedResponse etc..)
