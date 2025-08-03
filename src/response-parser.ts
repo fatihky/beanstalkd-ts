@@ -29,6 +29,7 @@ import {
   UsingTubeResponse,
   WatchingResponse,
 } from './responses';
+import { TouchedResponse } from './responses/touched-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');
@@ -87,6 +88,8 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, ReleasedResponse);
     if (bufStartsWith(data, TimedOutResponse.raw))
       return this.handleConstantResponse(data, TimedOutResponse);
+    if (bufStartsWith(data, TouchedResponse.raw))
+      return this.handleConstantResponse(data, TouchedResponse);
     if (bufStartsWith(data, UnknownCommandResponse.raw))
       return this.handleConstantResponse(data, UnknownCommandResponse);
     if (bufStartsWith(data, UsingTubeResponse.prefix))

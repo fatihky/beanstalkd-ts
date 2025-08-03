@@ -20,6 +20,7 @@ export * from './paused-response';
 export * from './released-response';
 export * from './reserved-response';
 export * from './timed-out-response';
+export * from './touched-response';
 export * from './unknown-command-response';
 export * from './using-tube-response';
 export * from './watching-response';
