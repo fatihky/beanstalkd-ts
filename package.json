@@ -8,7 +8,8 @@
     "build": "tsc",
     "format": "biome format --write .",
     "lint": "biome lint --write .",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "npm run build"
   },
   "files": [
     "./dist/src"
