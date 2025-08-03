@@ -9,7 +9,8 @@
     "format": "biome format --write .",
     "lint": "biome lint --write .",
     "test": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "typecheck": "tsc --noEmit"
   },
   "files": [
     "./dist/src"

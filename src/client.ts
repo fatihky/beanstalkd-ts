@@ -41,6 +41,7 @@ import {
 import { BeanstalkdResponseParser } from './response-parser';
 import {
   BadFormatResponse,
+  BeanstalkdJob,
   type BeanstalkdResponse,
   DeadlineSoonResponse,
   type DeletedResponse,
@@ -311,18 +312,18 @@ export class BeanstalkdClient {
    * Reserve a job.
    * This command blocks infinitely until a job gets reserved.
    */
-  async reserve(): Promise<ReservedResponse> {
+  async reserve(): Promise<BeanstalkdJob> {
     return this.runCommand(reserve, void 0);
   }
 
   /**
    * Reserve a specific job
    */
-  async reserveJob(jobId: number): Promise<ReservedResponse> {
+  async reserveJob(jobId: number): Promise<BeanstalkdJob> {
     return this.runCommand(reserveJob, jobId);
   }
 
-  async reserveWithTimeout(timeoutSeconds: number): Promise<ReservedResponse> {
+  async reserveWithTimeout(timeoutSeconds: number): Promise<BeanstalkdJob> {
     return this.runCommand(reserveWithTimeout, timeoutSeconds);
   }
 

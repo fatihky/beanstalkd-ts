@@ -21,7 +21,7 @@ async function consumer() {
   for (; ; processed++) {
     const job = await client.reserve();
 
-    await client.deleteJob(job.jobId);
+    await client.deleteJob(job.id);
   }
 }
 

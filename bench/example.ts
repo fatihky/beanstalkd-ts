@@ -16,15 +16,15 @@ async function main() {
 
   const result = await client.reserve();
 
-  console.log('touch result:', await client.touch(result.jobId));
+  console.log('touch result:', await client.touch(result.id));
 
-  const jobStats = await client.statsJob(result.jobId);
+  const jobStats = await client.statsJob(result.id);
 
   console.log('job stats:', jobStats);
 
-  await client.bury(result.jobId);
+  await client.bury(result.id);
 
-  const kicked = await client.kickJob(result.jobId);
+  const kicked = await client.kickJob(result.id);
 
   console.log('kick job response:', kicked);
 
