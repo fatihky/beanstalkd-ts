@@ -20,6 +20,7 @@ import {
   stats,
   use,
   watch,
+  kickJob,
 } from './commands';
 import {
   BadFormatError,
@@ -42,6 +43,7 @@ import {
   type InsertedResponse,
   InternalErrorResponse,
   JobBuriedResponse,
+  JobKickedResponse,
   type KickedResponse,
   NotFoundResponse,
   NotIgnoredResponse,
@@ -173,6 +175,20 @@ export class BeanstalkdClient {
    */
   async kick(jobCount: number): Promise<KickedResponse> {
     return this.runCommand(kick, jobCount);
+  }
+
+  /**
+   * Kick/move a specific job into the "ready" queue.
+   *
+   * From beanstalkd docs:
+   *
+   * The kick-job command is a variant of kick that operates with a single job
+   * identified by its job id. If the given job id exists and is in a buried or
+   * delayed state, it will be moved to the ready queue of the the same tube where it
+   * currently belongs. The syntax is:
+   */
+  async kickJob(jobId: number): Promise<JobKickedResponse> {
+    return this.runCommand(kickJob, jobId);
   }
 
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
