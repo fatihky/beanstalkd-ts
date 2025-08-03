@@ -1,1 +1,5 @@
-export class UnkownCommandError extends Error {}
+import { BeanstalkdError } from './beanstalkd-error';
+
+export class UnkownCommandError extends BeanstalkdError {
+  override name = 'UnkownCommandError';
+}

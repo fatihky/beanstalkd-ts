@@ -1,3 +1,5 @@
+import { BeanstalkdError } from './beanstalkd-error';
+
 /**
  * From the beanstalkd manual:
  *
@@ -7,4 +9,6 @@
  * the safety margin arrives while the client is waiting on a reserve command,
  * the server will respond with:
  */
-export class DeadlineSoonError extends Error {}
+export class DeadlineSoonError extends BeanstalkdError {
+  override name = 'DeadlineSoonError';
+}

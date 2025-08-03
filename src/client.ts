@@ -30,6 +30,7 @@ import {
 import {
   BadFormatError,
   BeanstalkdInternalError,
+  BuriedError,
   DeadlineSoonError,
   JobBuriedError,
   NotFoundError,
@@ -38,11 +39,13 @@ import {
   TimedOutError,
   UnkownCommandError,
 } from './errors';
+import { BeanstalkdError } from './errors/beanstalkd-error';
 import { BeanstalkdResponseParser } from './response-parser';
 import {
   BadFormatResponse,
   type BeanstalkdJob,
   type BeanstalkdResponse,
+  BuriedResponse,
   DeadlineSoonResponse,
   type DeletedResponse,
   type FoundResponse,
@@ -56,7 +59,6 @@ import {
   NotIgnoredResponse,
   OutOfMemoryResponse,
   type PausedResponse,
-  type ReservedResponse,
   type ServerStats,
   TimedOutResponse,
   type TouchedResponse,
@@ -100,6 +102,7 @@ export class BeanstalkdClient {
     response: BeanstalkdResponse,
   ): Error | null {
     if (response instanceof BadFormatResponse) return new BadFormatError();
+    if (response instanceof BuriedResponse) return new BuriedError();
     if (response instanceof DeadlineSoonResponse)
       return new DeadlineSoonError();
     if (response instanceof InternalErrorResponse)
@@ -398,7 +401,7 @@ export class BeanstalkdClient {
       const handler: ResponseHandler = (response) => {
         if (writeFailed) return; // already rejected
 
-        if (response instanceof Error) {
+        if (response instanceof Error || response instanceof BeanstalkdError) {
           response.stack = [originalStack, response.stack].join('\n');
 
           reject(response);

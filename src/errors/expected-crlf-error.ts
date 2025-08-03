@@ -1,1 +1,5 @@
-export class ExpectedCrlfError extends Error {}
+import { BeanstalkdError } from './beanstalkd-error';
+
+export class ExpectedCrlfError extends BeanstalkdError {
+  override name = 'ExpectedCrlfError';
+}
