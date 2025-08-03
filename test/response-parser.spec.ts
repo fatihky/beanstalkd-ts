@@ -3,6 +3,13 @@ import { InsertedResponse, TimedOutResponse } from '../src';
 import { BeanstalkdResponseParser } from '../src/response-parser';
 
 describe('response parser', () => {
+  it('should parse multiple complete responses in one buffer', () => {
+    const parser = new BeanstalkdResponseParser();
+    const result = parser.read(Buffer.from('TIMED_OUT\r\nINSERTED 123\r\n'));
+
+    expect(result).toBeInstanceOf(Array);
+  });
+
   it('should parse partial constant responses', () => {
     const parser = new BeanstalkdResponseParser();
 

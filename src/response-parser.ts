@@ -4,7 +4,7 @@
  */
 import {
   BadFormatResponse,
-  BeanstalkdResponse,
+  type BeanstalkdResponse,
   BuriedResponse,
   DeadlineSoonResponse,
   DeletedResponse,
@@ -37,19 +37,53 @@ const empty: Buffer<ArrayBufferLike> = Buffer.from('');
 export class BeanstalkdResponseParser {
   private buf = empty;
 
-  read(buf: Buffer): BeanstalkdResponse | null {
-    const data = this.buf.length > 0 ? Buffer.concat([this.buf, buf]) : buf;
+  read(buf: Buffer): BeanstalkdResponse | BeanstalkdResponse[] | null {
+    let remaining = this.buf.length > 0 ? Buffer.concat([this.buf, buf]) : buf;
+    const responses: BeanstalkdResponse[] = [];
 
+    for (;;) {
+      const result = this.parseIncomingBuffer(remaining);
+
+      if (result === null) {
+        // wait for more data
+        this.buf = remaining;
+
+        return responses.length > 0
+          ? responses.length === 1
+            ? responses[0]
+            : responses
+          : null; // stop parsing. need more data
+      }
+
+      if (Array.isArray(result)) {
+        responses.push(result[0]);
+
+        remaining = result[1];
+
+        continue; // try to parse again
+      }
+
+      // extracted a response. no more extra bytes left.
+      responses.push(result);
+      // reset the buffer
+      this.buf = empty;
+
+      return responses.length === 1 ? result : responses;
+    }
+  }
+
+  private parseIncomingBuffer(
+    data: Buffer,
+  ): BeanstalkdResponse | [BeanstalkdResponse, Buffer] | null {
     // we expect to receive the OK response most of the time.
     // so first try to parse that, otherwise try the other responses.
-    if (bufStartsWith(data, OkResponse.prefix))
-      return this.handleParseResult(data, OkResponse.parse(data));
+    if (bufStartsWith(data, OkResponse.prefix)) return OkResponse.parse(data);
 
     if (bufStartsWith(data, InsertedResponse.prefix))
-      return this.handleParseResult(data, InsertedResponse.parse(data));
+      return InsertedResponse.parse(data);
 
     if (bufStartsWith(data, ReservedResponse.prefix))
-      return this.handleParseResult(data, ReservedResponse.parse(data));
+      return ReservedResponse.parse(data);
 
     // rest of responses are alphabetilcally sorted
     if (bufStartsWith(data, BadFormatResponse.raw))
@@ -57,9 +91,9 @@ export class BeanstalkdResponseParser {
     if (bufStartsWith(data, BuriedResponse.raw))
       return this.handleConstantResponse(data, BuriedResponse);
     if (bufStartsWith(data, FoundResponse.prefix))
-      return this.handleParseResult(data, FoundResponse.parse(data));
+      return FoundResponse.parse(data);
     if (bufStartsWith(data, JobBuriedResponse.prefix))
-      return this.handleParseResult(data, JobBuriedResponse.parse(data));
+      return JobBuriedResponse.parse(data);
     if (bufStartsWith(data, DeadlineSoonResponse.raw))
       return this.handleConstantResponse(data, DeadlineSoonResponse);
     if (bufStartsWith(data, DrainingResponse.raw))
@@ -75,7 +109,7 @@ export class BeanstalkdResponseParser {
     if (bufStartsWith(data, JobTooBigResponse.raw))
       return this.handleConstantResponse(data, JobTooBigResponse);
     if (bufStartsWith(data, KickedResponse.prefix))
-      return this.handleParseResult(data, KickedResponse.parse(data));
+      return KickedResponse.parse(data);
     if (bufStartsWith(data, NotFoundResponse.raw))
       return this.handleConstantResponse(data, NotFoundResponse);
     if (bufStartsWith(data, NotIgnoredResponse.raw))
@@ -93,12 +127,9 @@ export class BeanstalkdResponseParser {
     if (bufStartsWith(data, UnknownCommandResponse.raw))
       return this.handleConstantResponse(data, UnknownCommandResponse);
     if (bufStartsWith(data, UsingTubeResponse.prefix))
-      return this.handleParseResult(data, UsingTubeResponse.parse(data));
+      return UsingTubeResponse.parse(data);
     if (bufStartsWith(data, WatchingResponse.prefix))
-      return this.handleParseResult(data, WatchingResponse.parse(data));
-
-    // wait for more data
-    this.buf = data;
+      return WatchingResponse.parse(data);
 
     return null;
   }
@@ -106,39 +137,13 @@ export class BeanstalkdResponseParser {
   private handleConstantResponse<T extends BeanstalkdResponse>(
     buf: Buffer,
     cons: (new () => T) & { raw: Buffer },
-  ): T | null {
+  ): T | [T, Buffer] | null {
     if (buf.byteLength === cons.raw.byteLength) {
       return new cons();
     }
 
     const remaining = buf.subarray(cons.raw.byteLength);
 
-    this.buf = remaining;
-
-    return new cons();
-  }
-
-  private handleParseResult(
-    data: Buffer,
-    result: BeanstalkdResponse | [BeanstalkdResponse, Buffer] | null,
-  ): BeanstalkdResponse | null {
-    if (result === null) {
-      this.buf = data; // wait for more data
-
-      return null;
-    }
-
-    if (result instanceof BeanstalkdResponse) {
-      this.buf = empty;
-      return result;
-    }
-
-    // Got [BeanstalkdResponse, Buffer] tuple
-
-    const [response, remaining] = result;
-
-    this.buf = remaining;
-
-    return response;
+    return [new cons(), remaining];
   }
 }
