@@ -5,6 +5,7 @@ export * from './deadline-soon-response';
 export * from './deleted-response';
 export * from './draining-response';
 export * from './expected-crlf-response';
+export * from './found-response';
 export * from './inserted-response';
 export * from './internal-error-response';
 export * from './job-buried-response';
