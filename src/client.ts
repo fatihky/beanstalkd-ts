@@ -6,6 +6,7 @@ import {
   ignore,
   type PutParams,
   pauseTube,
+  peek,
   put,
   release,
   reserve,
@@ -15,6 +16,9 @@ import {
   stats,
   use,
   watch,
+  peekBuried,
+  peekDelayed,
+  peekReady,
 } from './commands';
 import {
   BadFormatError,
@@ -33,6 +37,7 @@ import {
   type BeanstalkdResponse,
   DeadlineSoonResponse,
   type DeletedResponse,
+  type FoundResponse,
   type InsertedResponse,
   InternalErrorResponse,
   JobBuriedResponse,
@@ -154,6 +159,34 @@ export class BeanstalkdClient {
 
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
     return this.runCommand(pauseTube, { tube, delay: delaySeconds });
+  }
+
+  /**
+   * Peek/inspect a job
+   */
+  async peek(jobId: number): Promise<FoundResponse> {
+    return this.runCommand(peek, jobId);
+  }
+
+  /**
+   * Peek/inspect a job in "buried" state
+   */
+  async peekBuried(): Promise<FoundResponse> {
+    return this.runCommand(peekBuried, void 0);
+  }
+
+  /**
+   * Peek/inspect a job in "delayed" state
+   */
+  async peekDelayed(): Promise<FoundResponse> {
+    return this.runCommand(peekDelayed, void 0);
+  }
+
+  /**
+   * Peek/inspect a job in "ready" state
+   */
+  async peekReady(): Promise<FoundResponse> {
+    return this.runCommand(peekReady, void 0);
   }
 
   /**

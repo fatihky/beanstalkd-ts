@@ -7,10 +7,7 @@
     "skipLibCheck": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "paths": {
-      "~": ["./src"]
-    }
+    "declaration": true
   },
   "include": ["./bench", "./src", "./test"]
 }
