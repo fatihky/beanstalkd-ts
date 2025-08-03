@@ -6,6 +6,9 @@ import {
   ignore,
   kick,
   kickJob,
+  listTubes,
+  listTubesWatched,
+  listTubeUsed,
   pauseTube,
   peek,
   peekBuried,
@@ -193,6 +196,21 @@ export class BeanstalkdClient {
    */
   async kickJob(jobId: number): Promise<JobKickedResponse> {
     return this.runCommand(kickJob, jobId);
+  }
+
+  /** list all beanstalkd tubes */
+  async listTubes(): Promise<string[]> {
+    return this.runCommand(listTubes, void 0);
+  }
+
+  /** list watched beanstalkd tubes */
+  async listTubesWatched(): Promise<string[]> {
+    return this.runCommand(listTubesWatched, void 0);
+  }
+
+  /** get the tube name currently used */
+  async listTubeUsed(): Promise<UsingTubeResponse> {
+    return this.runCommand(listTubeUsed, void 0);
   }
 
   async pauseTube(tube: string, delaySeconds: number): Promise<PausedResponse> {
