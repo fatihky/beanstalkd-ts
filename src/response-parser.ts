@@ -25,11 +25,11 @@ import {
   ReleasedResponse,
   ReservedResponse,
   TimedOutResponse,
+  TouchedResponse,
   UnknownCommandResponse,
   UsingTubeResponse,
   WatchingResponse,
 } from './responses';
-import { TouchedResponse } from './responses/touched-response';
 import { bufStartsWith } from './utils';
 
 const empty: Buffer<ArrayBufferLike> = Buffer.from('');

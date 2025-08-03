@@ -1,6 +1,5 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, OkResponse } from '../responses';
-import { JobStats } from '../responses/job-stats';
+import { type BeanstalkdResponse, JobStats, OkResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class StatsJobCommand extends BeanstalkdCommand<JobStats, number> {

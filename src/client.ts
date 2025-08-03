@@ -20,7 +20,6 @@ import {
   reserve,
   reserveJob,
   reserveWithTimeout,
-  type StatsResult,
   stats,
   statsJob,
   statsTube,
@@ -50,20 +49,21 @@ import {
   InternalErrorResponse,
   JobBuriedResponse,
   type JobKickedResponse,
+  type JobStats,
   type KickedResponse,
   NotFoundResponse,
   NotIgnoredResponse,
   OutOfMemoryResponse,
   type PausedResponse,
   type ReservedResponse,
+  type ServerStats,
   TimedOutResponse,
   type TouchedResponse,
+  type TubeStats,
   UnknownCommandResponse,
   type UsingTubeResponse,
   type WatchingResponse,
 } from './responses';
-import type { JobStats } from './responses/job-stats';
-import type { TubeStats } from './responses/tube-stats';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -329,7 +329,7 @@ export class BeanstalkdClient {
   /**
    * Get server statistics
    */
-  async stats(): Promise<StatsResult> {
+  async stats(): Promise<ServerStats> {
     return this.runCommand(stats, void 0);
   }
 

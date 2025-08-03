@@ -1,6 +1,5 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, OkResponse } from '../responses';
-import { TubeStats } from '../responses/tube-stats';
+import { type BeanstalkdResponse, OkResponse, TubeStats } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class StatsTubeCommand extends BeanstalkdCommand<TubeStats, string> {
