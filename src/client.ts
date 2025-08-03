@@ -9,20 +9,20 @@ import {
   listTubes,
   listTubesWatched,
   listTubeUsed,
+  type PutParams,
   pauseTube,
   peek,
   peekBuried,
   peekDelayed,
   peekReady,
   put,
-  type PutParams,
   release,
   reserve,
   reserveJob,
   reserveWithTimeout,
+  type StatsResult,
   stats,
   statsJob,
-  type StatsResult,
   statsTube,
   touch,
   use,
@@ -49,7 +49,7 @@ import {
   type InsertedResponse,
   InternalErrorResponse,
   JobBuriedResponse,
-  JobKickedResponse,
+  type JobKickedResponse,
   type KickedResponse,
   NotFoundResponse,
   NotIgnoredResponse,
@@ -57,13 +57,13 @@ import {
   type PausedResponse,
   type ReservedResponse,
   TimedOutResponse,
-  TouchedResponse,
+  type TouchedResponse,
   UnknownCommandResponse,
   type UsingTubeResponse,
   type WatchingResponse,
 } from './responses';
-import { JobStats } from './responses/job-stats';
-import { TubeStats } from './responses/tube-stats';
+import type { JobStats } from './responses/job-stats';
+import type { TubeStats } from './responses/tube-stats';
 
 interface BeanstalkdClientParams {
   host?: string;
@@ -133,6 +133,14 @@ export class BeanstalkdClient {
         handler(BeanstalkdClient.handleGenericErrorResponse(result) ?? result);
       });
     });
+  }
+
+  /**
+   * If you need to handle connection events, implement auto-reconnect functionality, etc,
+   * you can get the underlying connection instance through this command.
+   */
+  getConnection(): Socket | null {
+    return this.connection;
   }
 
   async close() {
