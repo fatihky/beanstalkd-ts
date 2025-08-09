@@ -1,8 +1,8 @@
 import assert from 'node:assert';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdProtocolError } from '../src/beanstalkd-protocol-error';
-import { parseResponseWithInt } from '../src/responses/utils/parse-response-with-int';
 import { MAX_HEADER_LENGTH } from '../src/constants';
+import { parseResponseWithInt } from '../src/responses/utils/parse-response-with-int';
 
 describe('parse responses with id', () => {
   const prefix = Buffer.from('PREFIX ');

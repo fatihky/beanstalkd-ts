@@ -4,7 +4,7 @@
  */
 import {
   BadFormatResponse,
-  type BeanstalkdResponse,
+  BeanstalkdResponse,
   BuriedResponse,
   DeadlineSoonResponse,
   DeletedResponse,
@@ -44,6 +44,15 @@ export class BeanstalkdResponseParser {
     for (;;) {
       const result = this.parseIncomingBuffer(remaining);
 
+      if (result instanceof BeanstalkdResponse) {
+        // extracted a response. no more extra bytes left.
+        responses.push(result);
+        // reset the buffer
+        this.buf = empty;
+
+        return responses.length === 1 ? result : responses;
+      }
+
       if (result === null) {
         // wait for more data
         this.buf = remaining;
@@ -55,20 +64,13 @@ export class BeanstalkdResponseParser {
           : null; // stop parsing. need more data
       }
 
-      if (Array.isArray(result)) {
-        responses.push(result[0]);
+      // Array.isArray(result)
 
-        remaining = result[1];
+      responses.push(result[0]);
 
-        continue; // try to parse again
-      }
+      remaining = result[1];
 
-      // extracted a response. no more extra bytes left.
-      responses.push(result);
-      // reset the buffer
-      this.buf = empty;
-
-      return responses.length === 1 ? result : responses;
+      // try to parse again
     }
   }
 

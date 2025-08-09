@@ -1,3 +1,4 @@
+import { createServer } from 'node:net';
 import getPort from 'get-port';
 import { describe, expect, it } from 'vitest';
 import { BeanstalkdClient } from '../src/client';
@@ -24,7 +25,6 @@ import {
   TimedOutResponse,
   UnknownCommandResponse,
 } from '../src/responses';
-import { createServer } from 'net';
 
 describe('beanstalkd client tests', () => {
   it('should handle error responses', () => {
