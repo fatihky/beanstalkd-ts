@@ -1,6 +1,7 @@
 import { BeanstalkdProtocolError } from '../beanstalkd-protocol-error';
-import { bufEndsWith, crlf } from '../utils';
 import { BeanstalkdResponse } from './beanstalkd-response';
+import { parseHeaderWithValues } from './utils/parse-header';
+import { readPayload } from './utils/read-payload';
 
 const okPrefix = Buffer.from('OK ');
 
@@ -17,46 +18,23 @@ export class OkResponse extends BeanstalkdResponse {
   }
 
   static parse(buf: Buffer): OkResponse | [OkResponse, Buffer] | null {
-    const crlfIndex = buf.indexOf(crlf);
+    const header = parseHeaderWithValues(buf, okPrefix, { intCount: 1 });
 
-    if (crlfIndex === -1) return null;
+    if (header === null) return null;
 
-    const bytes = buf.toString('ascii', okPrefix.length, crlfIndex);
-    const bytesNum = Number(bytes);
+    const [bytes] = header;
 
-    if (Number.isNaN(bytesNum) || !Number.isInteger(bytesNum) || bytesNum < 0)
-      throw new BeanstalkdProtocolError('Invalid bytes');
+    if (bytes < 0)
+      throw new BeanstalkdProtocolError(
+        'Got invalid OK response payload length',
+      );
 
-    // ensure buf contains all the necessary bytes
-    const headerLength =
-      // length of "OK <bytes>\r\n"
-      okPrefix.byteLength + bytes.length + crlf.byteLength;
-    const expectedByteLength =
-      headerLength +
-      // length of "<data>\r\n"
-      bytesNum +
-      crlf.length;
+    const payload = readPayload(buf, bytes);
 
-    if (buf.byteLength < expectedByteLength) return null; // wait for more data
+    if (payload === null) return null;
 
-    // ensure buf ends with crlf
-    const dataBuf = buf.subarray(
-      headerLength,
-      headerLength + bytesNum + crlf.byteLength + 1,
-    );
+    if (Array.isArray(payload)) return [new OkResponse(payload[0]), payload[1]];
 
-    if (!bufEndsWith(dataBuf, crlf)) {
-      throw new BeanstalkdProtocolError('Data does not end with \\r\\n');
-    }
-
-    const data = dataBuf.subarray(0, dataBuf.byteLength - crlf.byteLength);
-
-    if (buf.byteLength > expectedByteLength) {
-      const remaining = buf.subarray(expectedByteLength + 1);
-
-      return [new OkResponse(data), remaining];
-    }
-
-    return new OkResponse(data);
+    return new OkResponse(payload);
   }
 }

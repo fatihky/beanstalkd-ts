@@ -15,6 +15,17 @@ describe('read paylaod from beanstalkd response', () => {
     expect(result.toString()).toBe('beanstalkd-ts');
   });
 
+  it('should read payload and return remaining buffer', () => {
+    const result = readPayload(
+      Buffer.from('OK 1 2 3\r\nbeanstalkd-ts\r\nNEXT_RESULT 1 2 3\r\n'),
+      13,
+    );
+    expect(result).toBeInstanceOf(Array);
+    assert(Array.isArray(result));
+    expect(result[0].toString()).toBe('beanstalkd-ts');
+    expect(result[1].toString()).toBe('NEXT_RESULT 1 2 3\r\n');
+  });
+
   it('should return null if the buffer is not complete', () => {
     expect(readPayload(Buffer.from('RESULT 1 2 3\r\n'), 13)).toBeNull();
   });

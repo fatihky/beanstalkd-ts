@@ -34,6 +34,7 @@ export function readPayload(
       0,
       crlf.byteLength,
       payloadOffset + byteCount, // look right after the payload
+      payloadOffset + byteCount + crlf.byteLength,
     ) === 0;
 
   if (!payloadTerminatedWithCrlf)
@@ -46,6 +47,6 @@ export function readPayload(
 
   return [
     buf.subarray(payloadOffset, payloadOffset + byteCount), // payload
-    buf.subarray(payloadOffset + byteCount), // remaining bytes
+    buf.subarray(expectedByteLength), // remaining bytes
   ];
 }

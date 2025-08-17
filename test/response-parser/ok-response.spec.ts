@@ -12,7 +12,7 @@ import { OkResponse } from '../../src/responses';
 describe('ok response', () => {
   it('parse ok response', () => {
     const parser = new BeanstalkdResponseParser();
-    const input = Buffer.from('OK 12\r\nbeanstalkd-ts\r\n');
+    const input = Buffer.from('OK 13\r\nbeanstalkd-ts\r\n');
     const response = parser.read(input);
 
     expect(response).instanceOf(OkResponse);
@@ -20,7 +20,7 @@ describe('ok response', () => {
 
   it('parse ok response if partially received', () => {
     const parser = new BeanstalkdResponseParser();
-    const input1 = Buffer.from('OK 12\r\n');
+    const input1 = Buffer.from('OK 13\r\n');
     const input2 = Buffer.from('beanstalkd-ts\r\n');
 
     expect(parser.read(input1)).toBeNull(); // wait for more data
@@ -32,8 +32,8 @@ describe('ok response', () => {
 
   it('parse ok response if partially received two commands', () => {
     const parser = new BeanstalkdResponseParser();
-    const input1 = Buffer.from('OK 12\r\n');
-    const input2 = Buffer.from('beanstalkd-ts\r\nOK 12\r\n'); // also contains next response's header
+    const input1 = Buffer.from('OK 13\r\n');
+    const input2 = Buffer.from('beanstalkd-ts\r\nOK 13\r\n'); // also contains next response's header
     const input3 = Buffer.from('beanstalkd-ts\r\n');
 
     expect(parser.read(input1)).toBeNull(); // wait for more data
@@ -48,7 +48,7 @@ describe('ok response', () => {
   });
 
   it('should return remaining bytes to be parsed', () => {
-    const input = Buffer.from('OK 12\r\nbeanstalkd-ts\r\nextra');
+    const input = Buffer.from('OK 13\r\nbeanstalkd-ts\r\nextra');
     const response = OkResponse.parse(input);
 
     // parser should return remaining bytes along with the OK response
@@ -65,7 +65,7 @@ describe('ok response', () => {
 
   it('should throw if data was not terminated with crlf', () => {
     const parser = new BeanstalkdResponseParser();
-    const input = Buffer.from('OK 12\r\nbeanstalkd-ts some extra bytes');
+    const input = Buffer.from('OK 13\r\nbeanstalkd-ts some extra bytes');
 
     expect(() => parser.read(input)).toThrowError(BeanstalkdProtocolError);
   });
