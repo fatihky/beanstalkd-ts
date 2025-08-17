@@ -1,6 +1,6 @@
 {
   "name": "beanstalkd-ts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Beanstalkd client with full typescript support. Extremely fast, lightweight and dependency-free.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
