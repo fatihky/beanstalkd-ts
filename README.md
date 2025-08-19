@@ -1,5 +1,7 @@
 # Beanstalkd Client with full TypeScript support
 
+**STATUS**: **BETA**. This library is still under heavy development. Do not use in production.
+
 Installation:
 
 ```sh
