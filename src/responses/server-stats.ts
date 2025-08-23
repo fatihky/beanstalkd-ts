@@ -4,7 +4,7 @@ export class ServerStats {
   readonly binlogCurrentIndex: number;
   readonly binlogMaxSize: number;
   readonly binlogOldestIndex: number;
-  readonly bingloRecordsMigrated: number;
+  readonly binlogRecordsMigrated: number;
   readonly binlogRecordsWritten: number;
   readonly cmdBury: number;
   readonly cmdDelete: number;
@@ -59,7 +59,7 @@ export class ServerStats {
     this.binlogCurrentIndex = yaml.readNumber('binlog-current-index');
     this.binlogMaxSize = yaml.readNumber('binlog-max-size');
     this.binlogOldestIndex = yaml.readNumber('binlog-oldest-index');
-    this.bingloRecordsMigrated = yaml.readNumber('binlog-records-migrated');
+    this.binlogRecordsMigrated = yaml.readNumber('binlog-records-migrated');
     this.binlogRecordsWritten = yaml.readNumber('binlog-records-written');
     this.cmdBury = yaml.readNumber('cmd-bury');
     this.cmdDelete = yaml.readNumber('cmd-delete');
