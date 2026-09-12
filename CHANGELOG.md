@@ -1,4 +1,13 @@
+### v0.1.9
+
+- added automatic retry
+
+### v0.1.8
+
+- dependencies upgraded
+
 ### v0.1.7
+
 **fix**: fixed typo in `bingloRecordsMigrated`. it must be `binlogRecordsMigrated`. (reported by @osmannyildiz)
 
 ### v0.1.6
