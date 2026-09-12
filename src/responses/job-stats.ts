@@ -22,6 +22,13 @@ export class JobStats {
   readonly timeouts: number;
   readonly ttr: number;
 
+  /**
+   * beanstalkd-pi extension: the tube this job was automatically
+   * dead-lettered out of (see "set-dlq"), or "" if that never happened.
+   * Always "" against stock beanstalkd.
+   */
+  readonly dlqFromTube: string;
+
   constructor(payload: string) {
     const yaml = new YamlPayload(payload);
 
@@ -40,5 +47,7 @@ export class JobStats {
     this.timeLeft = yaml.readNumber('time-left');
     this.timeouts = yaml.readNumber('timeouts');
     this.ttr = yaml.readNumber('ttr');
+
+    this.dlqFromTube = yaml.readOptionalString('dlq-from-tube');
   }
 }

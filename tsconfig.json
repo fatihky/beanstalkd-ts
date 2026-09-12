@@ -3,6 +3,7 @@
     "alwaysStrict": true,
     "noImplicitAny": true,
     "noImplicitOverride": true,
+    "module": "commonjs",
     "outDir": "./dist",
     "skipLibCheck": true,
     "strict": true,

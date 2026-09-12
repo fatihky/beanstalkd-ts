@@ -125,4 +125,59 @@ describe('beanstalkd client tests', () => {
       server.close();
     }
   });
+
+  it('detectCapabilities() returns null against a server without "capabilities" (e.g. stock beanstalkd)', async () => {
+    const port = await getPort();
+    const server = createServer((conn) => {
+      conn.on('data', () => conn.write(Buffer.from('UNKNOWN_COMMAND\r\n')));
+    });
+
+    const client = new BeanstalkdClient({ port });
+
+    try {
+      await new Promise<void>((resolve) => server.listen(port, resolve));
+
+      await client.connect();
+
+      await expect(client.detectCapabilities()).resolves.toBeNull();
+    } finally {
+      await client.close();
+      server.close();
+    }
+  });
+
+  it('detectCapabilities() returns the parsed Capabilities against beanstalkd-pi', async () => {
+    const port = await getPort();
+    const payload = [
+      '---',
+      'version: beanstalkd-pi-1.0.0',
+      'max-job-size: 65536',
+      'max-tube-name-len: 200',
+      'extensions: [ping, put-at, capabilities]',
+      '',
+    ].join('\n');
+    const server = createServer((conn) => {
+      conn.on('data', () =>
+        conn.write(Buffer.from(`OK ${payload.length}\r\n${payload}\r\n`)),
+      );
+    });
+
+    const client = new BeanstalkdClient({ port });
+
+    try {
+      await new Promise<void>((resolve) => server.listen(port, resolve));
+
+      await client.connect();
+
+      const capabilities = await client.detectCapabilities();
+
+      expect(capabilities).not.toBeNull();
+      expect(capabilities?.version).toBe('beanstalkd-pi-1.0.0');
+      expect(capabilities?.supports('put-at')).toBe(true);
+      expect(capabilities?.supports('set-dlq')).toBe(false);
+    } finally {
+      await client.close();
+      server.close();
+    }
+  });
 });

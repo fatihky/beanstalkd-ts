@@ -24,6 +24,19 @@ export class TubeStats {
   readonly pauseTimeLeft: number;
   readonly totalJobs: number;
 
+  /**
+   * beanstalkd-pi extension (see "set-dlq"): the number of failed deliveries
+   * a job must accumulate before being dead-lettered, or 0 if dead-letter
+   * routing is disabled for this tube. Always 0 against stock beanstalkd.
+   */
+  readonly dlqMaxAttempts: number;
+  /**
+   * beanstalkd-pi extension: the tube a job is dead-lettered into once it
+   * crosses `dlqMaxAttempts`, or "" if disabled. Always "" against stock
+   * beanstalkd.
+   */
+  readonly dlqTube: string;
+
   constructor(payload: string) {
     const yaml = new YamlPayload(payload);
 
@@ -42,5 +55,8 @@ export class TubeStats {
     this.pause = yaml.readNumber('pause');
     this.pauseTimeLeft = yaml.readNumber('pause-time-left');
     this.totalJobs = yaml.readNumber('total-jobs');
+
+    this.dlqMaxAttempts = yaml.readOptionalNumber('dlq-max-attempts');
+    this.dlqTube = yaml.readOptionalString('dlq-tube');
   }
 }

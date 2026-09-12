@@ -8,6 +8,7 @@ import {
   BuriedResponse,
   DeadlineSoonResponse,
   DeletedResponse,
+  DlqSetResponse,
   DrainingResponse,
   ExpectedCrlfResponse,
   FoundResponse,
@@ -22,10 +23,12 @@ import {
   OkResponse,
   OutOfMemoryResponse,
   PausedResponse,
+  PongResponse,
   ReleasedResponse,
   ReservedResponse,
   TimedOutResponse,
   TouchedResponse,
+  TubeDeletedResponse,
   UnknownCommandResponse,
   UsingTubeResponse,
   WatchingResponse,
@@ -102,6 +105,14 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, DrainingResponse);
     if (bufStartsWith(data, DeletedResponse.raw))
       return this.handleConstantResponse(data, DeletedResponse);
+    // beanstalkd-pi extension: "delete-tube"'s "DELETED <count>\r\n" reply.
+    // Checked after the constant "DELETED\r\n" above, which it never
+    // collides with (the byte after "DELETED" differs: ' ' vs '\r').
+    if (bufStartsWith(data, TubeDeletedResponse.prefix))
+      return TubeDeletedResponse.parse(data);
+    // beanstalkd-pi extension: "set-dlq"'s reply.
+    if (bufStartsWith(data, DlqSetResponse.raw))
+      return this.handleConstantResponse(data, DlqSetResponse);
     if (bufStartsWith(data, InternalErrorResponse.raw))
       return this.handleConstantResponse(data, InternalErrorResponse);
     if (bufStartsWith(data, ExpectedCrlfResponse.raw))
@@ -120,6 +131,9 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, OutOfMemoryResponse);
     if (bufStartsWith(data, PausedResponse.raw))
       return this.handleConstantResponse(data, PausedResponse);
+    // beanstalkd-pi extension: "ping"'s reply.
+    if (bufStartsWith(data, PongResponse.raw))
+      return this.handleConstantResponse(data, PongResponse);
     if (bufStartsWith(data, ReleasedResponse.raw))
       return this.handleConstantResponse(data, ReleasedResponse);
     if (bufStartsWith(data, TimedOutResponse.raw))

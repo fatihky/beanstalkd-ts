@@ -86,6 +86,51 @@ for (;;) {
 }
 ```
 
+### beanstalkd-pi support
+
+This client also works against [beanstalkd-pi](https://github.com/fatihky/beanstalkd-pi), a
+wire-compatible reimplementation of beanstalkd that adds nine extension commands with no stock
+equivalent. Since these commands don't exist against stock beanstalkd, feature-detect them with
+`detectCapabilities()` (returns `null`, instead of throwing, when the server doesn't recognize the
+"capabilities" command) before relying on them:
+
+```ts
+const capabilities = await client.detectCapabilities();
+
+if (capabilities?.supports('put-at')) {
+  await client.putAt('some payload', Math.floor(Date.UTC(2030, 0, 1) / 1000));
+}
+```
+
+The extension commands:
+
+```ts
+await client.ping(); // liveness check
+
+// "put" with an absolute Unix timestamp instead of a relative delay
+await client.putAt('some payload', unixTs, { pri: 1024, ttr: 60 });
+
+// "kick"/"peek-ready"/"peek-delayed"/"peek-buried" against an explicit tube,
+// instead of the connection's currently used tube
+await client.kickTube('some-tube', 10);
+await client.peekTube('some-tube', 'ready'); // or 'delayed' / 'buried'
+
+// delete every ready/delayed/buried job in a tube outright
+await client.deleteTube('some-tube');
+
+// configure automatic dead-letter routing for a tube (0 disables it again)
+await client.setDlq('some-tube', 3, 'some-tube-dead');
+
+// connection introspection, with no stock equivalent at all
+await client.statsConn(); // the calling connection
+await client.statsConn(someConnectionId);
+await client.listConnections();
+```
+
+`ServerStats`, `TubeStats`, and `JobStats` also gain a few extra fields when talking to
+beanstalkd-pi (extension command counters, dead-letter routing state); they read as `0`/`""`
+against stock beanstalkd.
+
 ### Features
 
 * **All commands** and their success results are typed. (OkResponse, InsertedResponse etc..)

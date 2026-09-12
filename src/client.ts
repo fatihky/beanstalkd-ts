@@ -2,25 +2,36 @@ import { createConnection, type Socket } from 'node:net';
 import {
   type BeanstalkdCommand,
   bury,
+  capabilities,
   del,
+  deleteTube,
   ignore,
   kick,
   kickJob,
+  kickTube,
+  listConnections,
   listTubes,
   listTubesWatched,
   listTubeUsed,
+  type PeekTubeState,
+  type PutAtParams,
   type PutParams,
   pauseTube,
   peek,
   peekBuried,
   peekDelayed,
   peekReady,
+  peekTube,
+  ping,
   put,
+  putAt,
   release,
   reserve,
   reserveJob,
   reserveWithTimeout,
+  setDlq,
   stats,
+  statsConn,
   statsJob,
   statsTube,
   touch,
@@ -46,6 +57,8 @@ import {
   type BeanstalkdJob,
   type BeanstalkdResponse,
   BuriedResponse,
+  type Capabilities,
+  type ConnectionStats,
   DeadlineSoonResponse,
   type DeletedResponse,
   type FoundResponse,
@@ -62,6 +75,7 @@ import {
   type ServerStats,
   TimedOutResponse,
   type TouchedResponse,
+  type TubeDeletedResponse,
   type TubeStats,
   UnknownCommandResponse,
   type UsingTubeResponse,
@@ -365,10 +379,52 @@ export class BeanstalkdClient {
   }
 
   /**
+   * beanstalkd-pi extension: discover what the connected server supports
+   * (version, max job size/tube name length, and which extension commands
+   * it recognizes) instead of hardcoding limits or probing commands one at
+   * a time.
+   *
+   * @throws {UnkownCommandError} against a server with no "capabilities"
+   * command, e.g. stock beanstalkd. Prefer `detectCapabilities()` if you'd
+   * rather get `null` back than handle that yourself.
+   */
+  async capabilities(): Promise<Capabilities> {
+    return this.runCommand(capabilities, void 0);
+  }
+
+  /**
+   * Like `capabilities()`, but returns `null` instead of throwing when the
+   * server doesn't understand the "capabilities" command (e.g. stock
+   * beanstalkd, or a beanstalkd-pi build predating this command) — handy for
+   * feature-detecting beanstalkd-pi extensions up front.
+   */
+  async detectCapabilities(): Promise<Capabilities | null> {
+    try {
+      return await this.capabilities();
+    } catch (err) {
+      if (err instanceof UnkownCommandError) return null;
+
+      throw err;
+    }
+  }
+
+  /**
    * Delete a job
    */
   async deleteJob(jobId: number): Promise<DeletedResponse> {
     return this.runCommand(del, jobId);
+  }
+
+  /**
+   * beanstalkd-pi extension: delete every ready, delayed, and buried job in
+   * `tube` outright, without reserving+deleting each individually. A job
+   * still reserved by another connection is left alone and deleted once
+   * that connection is done with it.
+   *
+   * @throws {NotFoundError} if the tube does not exist.
+   */
+  async deleteTube(tube: string): Promise<TubeDeletedResponse> {
+    return this.runCommand(deleteTube, tube);
   }
 
   /**
@@ -406,6 +462,24 @@ export class BeanstalkdClient {
    */
   async kickJob(jobId: number): Promise<JobKickedResponse> {
     return this.runCommand(kickJob, jobId);
+  }
+
+  /**
+   * beanstalkd-pi extension: "kick" restricted to an explicit tube instead
+   * of the connection's currently used tube.
+   *
+   * @throws {NotFoundError} if the named tube does not exist.
+   */
+  async kickTube(tube: string, bound: number): Promise<KickedResponse> {
+    return this.runCommand(kickTube, { tube, bound });
+  }
+
+  /**
+   * beanstalkd-pi extension: the same fields as `statsConn()`, for every
+   * currently connected client.
+   */
+  async listConnections(): Promise<ConnectionStats[]> {
+    return this.runCommand(listConnections, void 0);
   }
 
   /** list all beanstalkd tubes */
@@ -456,6 +530,25 @@ export class BeanstalkdClient {
   }
 
   /**
+   * beanstalkd-pi extension: "peek-ready"/"peek-delayed"/"peek-buried"
+   * restricted to an explicit tube instead of the connection's currently
+   * used tube.
+   *
+   * @throws {NotFoundError} if the tube does not exist, or exists but has no
+   * job in the requested state.
+   */
+  async peekTube(tube: string, state: PeekTubeState): Promise<FoundResponse> {
+    return this.runCommand(peekTube, { tube, state });
+  }
+
+  /**
+   * beanstalkd-pi extension: a bare liveness check.
+   */
+  async ping(): Promise<void> {
+    return this.runCommand(ping, void 0);
+  }
+
+  /**
    * put a job into the beanstalkd
    *
    * Might throw these errors:
@@ -470,6 +563,26 @@ export class BeanstalkdClient {
       data: payload,
       pri: opts?.pri ?? this.defaultPriority,
       delay: opts?.delay ?? this.defaultDelay,
+      ttr: opts?.ttr ?? this.defaultTtr,
+    });
+  }
+
+  /**
+   * beanstalkd-pi extension: "put" with an absolute schedule time instead of
+   * a relative delay — the job becomes ready at `unixTs` (seconds since the
+   * Unix epoch, UTC) rather than `delay` seconds from now.
+   *
+   * Might throw the same errors as `put()`.
+   */
+  async putAt(
+    payload: string,
+    unixTs: number,
+    opts?: Partial<Omit<PutAtParams, 'data' | 'unixTs'>>,
+  ): Promise<InsertedResponse> {
+    return this.runCommand(putAt, {
+      data: payload,
+      unixTs,
+      pri: opts?.pri ?? this.defaultPriority,
       ttr: opts?.ttr ?? this.defaultTtr,
     });
   }
@@ -532,10 +645,36 @@ export class BeanstalkdClient {
   }
 
   /**
+   * beanstalkd-pi extension: configures automatic dead-letter routing for a
+   * tube. `tube` is created if missing, like "use"; `deadTube` is not, and
+   * only needs to exist once a job is actually routed into it. Pass
+   * `maxAttempts: 0` to disable dead-letter routing for `tube` again.
+   */
+  async setDlq(
+    tube: string,
+    maxAttempts: number,
+    deadTube: string,
+  ): Promise<void> {
+    return this.runCommand(setDlq, { tube, maxAttempts, deadTube });
+  }
+
+  /**
    * Get server statistics
    */
   async stats(): Promise<ServerStats> {
     return this.runCommand(stats, void 0);
+  }
+
+  /**
+   * beanstalkd-pi extension: introspection stats about a connection. With no
+   * `id`, reports on the calling connection itself; with `id`, reports on
+   * the connection with that id (matching a `list-connections`/`stats-conn`
+   * entry's `id` field) instead.
+   *
+   * @throws {NotFoundError} if `id` is given and no such connection exists.
+   */
+  async statsConn(id?: number): Promise<ConnectionStats> {
+    return this.runCommand(statsConn, id);
   }
 
   /**
