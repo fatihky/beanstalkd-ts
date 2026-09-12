@@ -68,9 +68,48 @@ import {
   type WatchingResponse,
 } from './responses';
 
+export interface RetryOptions {
+  /** whether to automatically retry on connection failures (default: true) */
+  enabled?: boolean;
+  /** delay before the first retry attempt, in milliseconds (default: 200) */
+  initialDelayMs?: number;
+  /** upper bound for the retry delay, in milliseconds (default: 10_000) */
+  maxDelayMs?: number;
+  /** multiplier applied to the delay after each failed attempt (default: 2) */
+  factor?: number;
+  /** maximum number of retry attempts. use `Infinity` to retry forever (default: Infinity) */
+  maxRetries?: number;
+}
+
+const DEFAULT_RETRY_OPTIONS: Required<RetryOptions> = {
+  enabled: true,
+  initialDelayMs: 200,
+  maxDelayMs: 10_000,
+  factor: 2,
+  maxRetries: Number.POSITIVE_INFINITY,
+};
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 interface BeanstalkdClientParams {
   host?: string;
   port?: number;
+  /**
+   * Configure automatic retry on connection failures (both the initial `connect()`
+   * and reconnecting after an unexpected disconnect). Pass `false` to disable entirely
+   * and restore the old "fail fast, caller handles it" behavior.
+   *
+   * Defaults to exponential backoff, retrying forever.
+   */
+  retry?: boolean | RetryOptions;
+  /** called before each retry attempt, after a connection failure */
+  onReconnecting?: (attempt: number, delayMs: number, error: Error) => void;
+  /** called after successfully reconnecting following an unexpected disconnect */
+  onReconnected?: () => void;
+  /** called when auto-reconnect gives up after exhausting `retry.maxRetries` */
+  onReconnectFailed?: (error: Error) => void;
 }
 
 type ResponseHandler = (response: BeanstalkdResponse | Error) => void;
@@ -93,9 +132,31 @@ export class BeanstalkdClient {
   /** response handler queue */
   private queue: ResponseHandler[] = [];
 
+  private readonly retryOptions: Required<RetryOptions>;
+  private readonly onReconnecting?: BeanstalkdClientParams['onReconnecting'];
+  private readonly onReconnected?: BeanstalkdClientParams['onReconnected'];
+  private readonly onReconnectFailed?: BeanstalkdClientParams['onReconnectFailed'];
+  /** true once `close()`/`quit()` was called, so we don't try to auto-reconnect afterwards */
+  private manualClose = false;
+  /** the in-flight connect/reconnect attempt (including its retries), if any */
+  private connectingPromise: Promise<void> | null = null;
+
   constructor(params?: BeanstalkdClientParams) {
     this.host = params?.host ?? '127.0.0.1';
     this.port = params?.port ?? 11300;
+
+    const retry = params?.retry;
+    this.retryOptions = {
+      ...DEFAULT_RETRY_OPTIONS,
+      ...(typeof retry === 'object' ? retry : undefined),
+      enabled:
+        typeof retry === 'boolean'
+          ? retry
+          : (retry?.enabled ?? DEFAULT_RETRY_OPTIONS.enabled),
+    };
+    this.onReconnecting = params?.onReconnecting;
+    this.onReconnected = params?.onReconnected;
+    this.onReconnectFailed = params?.onReconnectFailed;
   }
 
   static handleGenericErrorResponse(
@@ -119,9 +180,100 @@ export class BeanstalkdClient {
     return null;
   }
 
+  /**
+   * Connect to beanstalkd.
+   *
+   * If `retry` is enabled (the default), this retries with exponential backoff until
+   * it connects, `retry.maxRetries` is exhausted (in which case it throws), or `close()`
+   * is called while it's retrying.
+   */
   async connect() {
     if (this.connection) return;
 
+    this.manualClose = false;
+
+    await (this.connectingPromise ?? this.beginConnecting());
+  }
+
+  /**
+   * If you need to handle connection events directly, you can get the underlying
+   * connection instance through this command. Note that auto-reconnect (see the
+   * `retry` constructor option) replaces the connection instance on every reconnect,
+   * so a reference obtained here can go stale after an unexpected disconnect.
+   */
+  getConnection(): Socket | null {
+    return this.connection;
+  }
+
+  async close() {
+    this.manualClose = true;
+
+    await new Promise<void>((resolve) => {
+      if (!this.connection || this.connection.destroyed) return resolve();
+
+      this.connection.end(() => resolve());
+    });
+
+    this.connection = null;
+  }
+
+  /** kicks off a connect/reconnect attempt (with retries) and tracks it as `connectingPromise` */
+  private beginConnecting(): Promise<void> {
+    const promise = this.connectWithRetry();
+
+    this.connectingPromise = promise;
+
+    // Always settle successfully so this branch never produces an unhandled rejection.
+    // Callers that need the outcome await `promise`/`this.connectingPromise` directly.
+    promise.then(
+      () => {
+        if (this.connectingPromise === promise) this.connectingPromise = null;
+      },
+      (err) => {
+        if (this.connectingPromise === promise) this.connectingPromise = null;
+
+        this.onReconnectFailed?.(err);
+      },
+    );
+
+    return promise;
+  }
+
+  private async connectWithRetry(): Promise<void> {
+    let attempt = 0;
+
+    for (;;) {
+      if (this.manualClose) throw new Error('Connection closed by client');
+
+      try {
+        await this.establishConnection();
+
+        return;
+      } catch (err) {
+        attempt++;
+
+        if (
+          !this.retryOptions.enabled ||
+          attempt > this.retryOptions.maxRetries
+        ) {
+          throw err;
+        }
+
+        const delay = Math.min(
+          this.retryOptions.initialDelayMs *
+            this.retryOptions.factor ** (attempt - 1),
+          this.retryOptions.maxDelayMs,
+        );
+
+        this.onReconnecting?.(attempt, delay, err as Error);
+
+        await sleep(delay);
+      }
+    }
+  }
+
+  /** open a single TCP connection attempt and wire it up; rejects on connection failure */
+  private establishConnection(): Promise<void> {
     const handle = (result: BeanstalkdResponse) => {
       const handler = this.queue.shift();
 
@@ -130,10 +282,32 @@ export class BeanstalkdClient {
       handler(BeanstalkdClient.handleGenericErrorResponse(result) ?? result);
     };
 
-    await new Promise<void>((resolve) => {
-      this.connection = createConnection(this.port, this.host, resolve);
+    return new Promise<void>((resolve, reject) => {
+      let settled = false;
+      const socket = createConnection(this.port, this.host);
 
-      this.connection.on('data', (data) => {
+      socket.once('connect', () => {
+        settled = true;
+        this.connection = socket;
+        resolve();
+      });
+
+      // an 'error' listener is required so a connection failure doesn't crash the
+      // process; the actual handling happens in the 'close' listener below, which
+      // always follows 'error' for a net.Socket.
+      socket.on('error', () => {});
+
+      socket.once('close', () => {
+        if (!settled) {
+          settled = true;
+          reject(new Error(`Failed to connect to ${this.host}:${this.port}`));
+          return;
+        }
+
+        this.handleUnexpectedClose(socket);
+      });
+
+      socket.on('data', (data) => {
         const results = this.parser.read(data);
 
         if (results === null) return; // wait for more data
@@ -145,20 +319,36 @@ export class BeanstalkdClient {
     });
   }
 
-  /**
-   * If you need to handle connection events, implement auto-reconnect functionality, etc,
-   * you can get the underlying connection instance through this command.
-   */
-  getConnection(): Socket | null {
-    return this.connection;
+  /** called when a previously-established connection closes without us asking for it */
+  private handleUnexpectedClose(socket: Socket) {
+    if (this.connection !== socket) return; // stale socket, already superseded
+
+    this.connection = null;
+
+    // these handlers will never get a response now; fail them instead of hanging forever
+    const pending = this.queue.splice(0, this.queue.length);
+    const err = new Error('Connection closed unexpectedly');
+
+    for (const handler of pending) handler(err);
+
+    if (this.manualClose || !this.retryOptions.enabled) return;
+
+    // failure is reported via onReconnectFailed inside beginConnecting()
+    this.beginConnecting().then(
+      () => this.onReconnected?.(),
+      () => {},
+    );
   }
 
-  async close() {
-    await new Promise<void>((resolve) => {
-      if (!this.connection || this.connection.destroyed) return;
+  /** wait out any in-flight (re)connect attempt; throws if there's no connection afterwards */
+  private async ensureConnected(): Promise<void> {
+    if (this.connection) return;
 
-      this.connection.end(resolve);
-    });
+    if (this.connectingPromise) {
+      await this.connectingPromise.catch(() => {});
+    }
+
+    if (!this.connection) throw new Error('Not connected');
   }
 
   /**
@@ -289,10 +479,15 @@ export class BeanstalkdClient {
    * the server will close our connection.
    */
   async quit() {
+    this.manualClose = true;
+
     await new Promise((resolve, reject) => {
       if (!this.connection) throw new Error('not connected');
 
-      this.connection.once('close', resolve);
+      this.connection.once('close', () => {
+        this.connection = null;
+        resolve(undefined);
+      });
 
       this.connection.write(Buffer.from('quit\r\n'), (err) => {
         if (err) {
@@ -390,12 +585,16 @@ export class BeanstalkdClient {
     return this.runCommand(watch, tube);
   }
 
-  private runCommand<A, T>(cmd: BeanstalkdCommand<T, A>, arg: A): Promise<T> {
-    const notConnectedError = new Error('Not connected');
+  private async runCommand<A, T>(
+    cmd: BeanstalkdCommand<T, A>,
+    arg: A,
+  ): Promise<T> {
     const originalStack = new Error().stack; // preserve the original stack trace
 
+    await this.ensureConnected();
+
     return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(notConnectedError);
+      if (!this.connection) return reject(new Error('Not connected'));
 
       let writeFailed = false;
       const handler: ResponseHandler = (response) => {
@@ -422,14 +621,14 @@ export class BeanstalkdClient {
     });
   }
 
-  private tubeCommand<T>(
+  private async tubeCommand<T>(
     cmd: BeanstalkdCommand<T, string>,
     tube: string,
   ): Promise<T> {
-    const notConnectedError = new Error('Not connected');
+    await this.ensureConnected();
 
     return new Promise((resolve, reject) => {
-      if (!this.connection) return reject(notConnectedError);
+      if (!this.connection) return reject(new Error('Not connected'));
 
       this.queue.push((response) =>
         response instanceof Error

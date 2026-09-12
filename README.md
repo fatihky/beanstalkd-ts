@@ -26,7 +26,34 @@ await client.deleteJob(result.jobId)
 
 For the list of available commands, refer to the official beanstalkd manual: https://raw.githubusercontent.com/beanstalkd/beanstalkd/master/doc/protocol.txt
 
-If you need to handle connection failures, you can use this method:
+By default, `connect()` and reconnection after an unexpected disconnect both retry
+automatically with exponential backoff (starting at 200ms, capped at 10s, retrying
+forever). Configure or disable this via the `retry` option:
+
+```ts
+const client = new BeanstalkdClient({
+  retry: {
+    initialDelayMs: 200,   // delay before the first retry (default: 200)
+    maxDelayMs: 10_000,    // upper bound for the delay (default: 10_000)
+    factor: 2,             // backoff multiplier (default: 2)
+    maxRetries: Infinity,  // give up after this many attempts (default: Infinity)
+  },
+  onReconnecting: (attempt, delayMs, error) => console.warn('retrying connection', attempt, delayMs, error),
+  onReconnected: () => console.log('reconnected'),
+  onReconnectFailed: (error) => console.error('giving up reconnecting', error),
+});
+
+// or disable it entirely and handle it yourself:
+const client = new BeanstalkdClient({ retry: false });
+```
+
+While a reconnect is in progress, in-flight commands from before the disconnect are
+rejected (they'll never get their response); new command calls made during/after a
+reconnect wait for it to finish and are sent once reconnected.
+
+If you need to handle connection events directly, you can use this method. Note that
+auto-reconnect replaces the underlying connection instance on every reconnect, so a
+reference obtained here can go stale after an unexpected disconnect.
 
 ```ts
 client.getConnection(); // returns Socket | null
@@ -67,8 +94,9 @@ for (;;) {
 * Throws errors with extra call stack (preserves original call stack)
 
 ### Non-features
-* DOES NOT handle auto-reconnect. Thus you need to handle the "close" event. And issue your `.use`/`.watch`/`.ignore` calls right after the `.connect` call.
-  You might want to stop the worker process and let process manager to wait for beanstalkd to become available.
+* Auto-reconnect does not replay in-flight commands. Any command that was pending when the
+  connection dropped is rejected; issue your `.use`/`.watch`/`.ignore` calls again after the
+  reconnect if they're needed for subsequent commands (e.g. in `onReconnected`).
 
 ### Statistics
 
