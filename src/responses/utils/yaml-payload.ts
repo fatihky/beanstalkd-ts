@@ -28,28 +28,60 @@ function parseFlowList(raw: string): string[] {
 }
 
 export class YamlPayload {
-  private values: Record<string, string>;
+  private values: Record<string, string> = {};
+  private lists: Record<string, string[]> = {};
 
   constructor(payload: string) {
-    this.values = Object.fromEntries(
-      payload
-        .trim()
-        .split('\n')
-        // ignore header line ("---") see
-        // - stats: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L140
-        // - stats-tube: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L194
-        // - stats-job: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L211
-        .slice(1)
-        .map((line) => {
-          // split on the first colon only: values like "addr" (a "host:port"
-          // string) or a flow-style list contain colons/commas of their own.
-          const colonIndex = line.indexOf(':');
-          const key = line.slice(0, colonIndex);
-          const value = line.slice(colonIndex + 1).trim();
+    const lines = payload
+      .trim()
+      .split('\n')
+      // ignore header line ("---") see
+      // - stats: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L140
+      // - stats-tube: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L194
+      // - stats-job: https://github.com/beanstalkd/beanstalkd/blob/master/prot.c#L211
+      .slice(1);
 
-          return [key, value];
-        }),
-    );
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.startsWith('- ') || line === '-')
+        throw new BeanstalkdInvalidResponseError(
+          `response payload contains an unexpected list item: "${line}"`,
+        );
+
+      // split on the first colon only: values like "addr" (a "host:port"
+      // string) or a flow-style list contain colons/commas of their own.
+      const colonIndex = line.indexOf(':');
+
+      if (colonIndex < 0)
+        throw new BeanstalkdInvalidResponseError(
+          `response payload contains a malformed line: "${line}"`,
+        );
+
+      const key = line.slice(0, colonIndex);
+      const value = line.slice(colonIndex + 1).trim();
+
+      // an empty value followed by "- " lines is a YAML block-style
+      // sequence (e.g. capabilities' "extensions"), not a blank string:
+      //
+      //     extensions:
+      //     - ping
+      //     - put-at
+      if (value === '' && lines[i + 1]?.startsWith('- ')) {
+        const items: string[] = [];
+        let j = i + 1;
+
+        while (j < lines.length && lines[j].startsWith('- ')) {
+          items.push(lines[j].slice(2).trim());
+          j++;
+        }
+
+        this.lists[key] = items;
+        i = j - 1; // resume the outer loop after the consumed items
+      } else {
+        this.values[key] = value;
+      }
+    }
   }
 
   /**
@@ -125,6 +157,23 @@ export class YamlPayload {
   /** read a YAML flow-style list of strings, e.g. "[default, foo]" or "[]". */
   readList(key: string): string[] {
     return parseFlowList(this.readString(key));
+  }
+
+  /**
+   * read a YAML block-style sequence of strings, e.g.
+   *
+   *     extensions:
+   *     - ping
+   *     - put-at
+   */
+  readBlockList(key: string): string[] {
+    if (!(key in this.lists)) {
+      throw new BeanstalkdInvalidResponseError(
+        `response payload does not include ${key}`,
+      );
+    }
+
+    return this.lists[key];
   }
 
   /** read a YAML flow-style list of integers, e.g. "[101, 102]" or "[]". */

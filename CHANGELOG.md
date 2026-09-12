@@ -1,5 +1,13 @@
 ### unreleased
 
+- **fix**: `capabilities()` no longer hangs forever against a real beanstalkd-pi server. `Capabilities`
+  parsed the `extensions` field as a flow-style list (`extensions: [ping, put-at, ...]`), but
+  beanstalkd-pi actually sends it as a YAML block-style sequence (`extensions:` followed by `- ping`,
+  `- put-at`, ...); `YamlPayload` now supports both (`readBlockList()` for the latter).
+- **fix**: a `BeanstalkdCommand.handle()` that throws (e.g. on an unexpected/malformed response) now
+  rejects the pending command's promise instead of escaping uncaught from the socket's `data` handler
+  and leaving that promise pending forever.
+
 ### v0.2.0
 
 - added support for [beanstalkd-pi](https://github.com/fatihky/beanstalkd-pi)'s nine extension

@@ -153,7 +153,10 @@ describe('beanstalkd client tests', () => {
       'version: beanstalkd-pi-1.0.0',
       'max-job-size: 65536',
       'max-tube-name-len: 200',
-      'extensions: [ping, put-at, capabilities]',
+      'extensions:',
+      '- ping',
+      '- put-at',
+      '- capabilities',
       '',
     ].join('\n');
     const server = createServer((conn) => {

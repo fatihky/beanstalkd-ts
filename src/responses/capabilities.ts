@@ -34,7 +34,9 @@ export class Capabilities {
     this.version = yaml.readString('version');
     this.maxJobSize = yaml.readNumber('max-job-size');
     this.maxTubeNameLen = yaml.readNumber('max-tube-name-len');
-    this.extensions = yaml.readList('extensions') as BeanstalkdExtension[];
+    this.extensions = yaml.readBlockList(
+      'extensions',
+    ) as BeanstalkdExtension[];
   }
 
   /** whether the server reported support for the given extension command. */

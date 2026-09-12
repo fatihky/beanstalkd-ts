@@ -743,8 +743,16 @@ export class BeanstalkdClient {
           response.stack = [originalStack, response.stack].join('\n');
 
           reject(response);
-        } else {
+          return;
+        }
+
+        // `cmd.handle()` can throw (e.g. a malformed/unexpected payload); without
+        // this try/catch that exception would escape the socket's 'data' handler
+        // uncaught, and this promise would never settle instead of rejecting.
+        try {
           resolve(cmd.handle(response));
+        } catch (err) {
+          reject(err);
         }
       };
 
@@ -769,11 +777,19 @@ export class BeanstalkdClient {
     return new Promise((resolve, reject) => {
       if (!this.connection) return reject(new Error('Not connected'));
 
-      this.queue.push((response) =>
-        response instanceof Error
-          ? reject(response)
-          : resolve(cmd.handle(response)),
-      );
+      this.queue.push((response) => {
+        if (response instanceof Error) {
+          reject(response);
+          return;
+        }
+
+        // see the equivalent try/catch in `runCommand` for why this is needed.
+        try {
+          resolve(cmd.handle(response));
+        } catch (err) {
+          reject(err);
+        }
+      });
 
       this.connection.write(cmd.compose(tube));
     });

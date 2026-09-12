@@ -8,7 +8,16 @@ const payload = [
   'version: beanstalkd-pi-1.0.0',
   'max-job-size: 65536',
   'max-tube-name-len: 200',
-  'extensions: [ping, put-at, kick-tube, delete-tube, peek-tube, stats-conn, list-connections, set-dlq, capabilities]',
+  'extensions:',
+  '- ping',
+  '- put-at',
+  '- kick-tube',
+  '- delete-tube',
+  '- peek-tube',
+  '- stats-conn',
+  '- list-connections',
+  '- set-dlq',
+  '- capabilities',
   '',
 ].join('\n');
 

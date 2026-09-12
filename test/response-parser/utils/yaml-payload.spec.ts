@@ -19,6 +19,24 @@ describe('YamlPayload', () => {
     expect(yaml.readList('empty')).toStrictEqual([]);
   });
 
+  it('reads block-style lists', () => {
+    const yaml = new YamlPayload(
+      '---\nversion: beanstalkd-pi-1.0.0\nextensions:\n- ping\n- put-at\n',
+    );
+
+    expect(yaml.readString('version')).toBe('beanstalkd-pi-1.0.0');
+    expect(yaml.readBlockList('extensions')).toStrictEqual(['ping', 'put-at']);
+  });
+
+  it('treats a genuinely empty value as a blank string, not a list', () => {
+    const yaml = new YamlPayload('---\ndlq-tube:\ndlq-max-attempts: 0\n');
+
+    expect(yaml.readOptionalString('dlq-tube')).toBe('');
+    expect(() => yaml.readBlockList('dlq-tube')).toThrowError(
+      BeanstalkdInvalidResponseError,
+    );
+  });
+
   it('reads booleans', () => {
     const yaml = new YamlPayload('---\na: true\nb: false\n');
 
