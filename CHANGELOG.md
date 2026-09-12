@@ -1,5 +1,7 @@
 ### unreleased
 
+### v0.2.0
+
 - added support for [beanstalkd-pi](https://github.com/fatihky/beanstalkd-pi)'s nine extension
   commands: `ping`, `putAt`, `kickTube`, `deleteTube`, `peekTube`, `statsConn`,
   `listConnections`, `setDlq`, and `capabilities`.
