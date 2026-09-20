@@ -53,6 +53,14 @@ describe('YamlPayload', () => {
     expect(yaml.readOptionalNumber('dlq-max-attempts', -1)).toBe(-1);
   });
 
+  it('reads an optional number as undefined when absent, e.g. "time-left" for a non-delayed list-jobs entry', () => {
+    const withKey = new YamlPayload('---\nid: 1\ntime-left: 42\n');
+    const withoutKey = new YamlPayload('---\nid: 1\n');
+
+    expect(withKey.readNumberOrUndefined('time-left')).toBe(42);
+    expect(withoutKey.readNumberOrUndefined('time-left')).toBeUndefined();
+  });
+
   it('throws for a non-list value', () => {
     const yaml = new YamlPayload('---\nfoo: bar\n');
 

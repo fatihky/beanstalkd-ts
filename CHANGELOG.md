@@ -1,5 +1,13 @@
 ### unreleased
 
+- added support for [beanstalkd-pi](https://github.com/fatihky/beanstalkd-pi)'s four remaining
+  extension commands: `listJobs()`, `listTubesPaused()`, `statsTubeAll()`, and `drain()`. Along
+  with the nine added in 0.2.0, this covers all thirteen of beanstalkd-pi's extension commands.
+  `ServerStats` gained matching `cmdListJobs`/`cmdListTubesPaused`/`cmdStatsTubeAll`/`cmdDrain`
+  counters, and `Capabilities.extensions`/`supports()` now recognize all thirteen names.
+- **fix**: `ListTubesCommand.parse()` (shared by `listTubes()`/`listTubesWatched()`/
+  `listTubesPaused()`) returned `['']` instead of `[]` for a genuinely empty tube sequence
+  ("---\n" with no entries) — reachable via `listTubesPaused()` whenever no tube is paused.
 - **fix**: `capabilities()` no longer hangs forever against a real beanstalkd-pi server. `Capabilities`
   parsed the `extensions` field as a flow-style list (`extensions: [ping, put-at, ...]`), but
   beanstalkd-pi actually sends it as a YAML block-style sequence (`extensions:` followed by `- ping`,

@@ -3,14 +3,18 @@ import {
   type BeanstalkdCommand,
   bury,
   capabilities,
+  type DrainAction,
   del,
   deleteTube,
+  drain,
   ignore,
   kick,
   kickJob,
   kickTube,
   listConnections,
+  listJobs,
   listTubes,
+  listTubesPaused,
   listTubesWatched,
   listTubeUsed,
   type PeekTubeState,
@@ -34,6 +38,7 @@ import {
   statsConn,
   statsJob,
   statsTube,
+  statsTubeAll,
   touch,
   use,
   watch,
@@ -66,6 +71,7 @@ import {
   InternalErrorResponse,
   JobBuriedResponse,
   type JobKickedResponse,
+  type JobListEntry,
   type JobStats,
   type KickedResponse,
   NotFoundResponse,
@@ -428,6 +434,19 @@ export class BeanstalkdClient {
   }
 
   /**
+   * beanstalkd-pi extension: turn drain mode on or off, or report its
+   * current state, as an alternative to sending SIGUSR1 to the process.
+   * While draining, "put"/"put-at" are rejected with `DrainingError`, but
+   * every other command keeps working normally.
+   *
+   * Resolves to whether the server is draining *after* the command runs
+   * (defaults to `'status'`, which never changes it).
+   */
+  async drain(action: DrainAction = 'status'): Promise<boolean> {
+    return this.runCommand(drain, action);
+  }
+
+  /**
    * Ignore/Unwatch a tube
    */
   async ignore(tube: string): Promise<WatchingResponse> {
@@ -482,9 +501,33 @@ export class BeanstalkdClient {
     return this.runCommand(listConnections, void 0);
   }
 
+  /**
+   * beanstalkd-pi extension: a bounded, non-destructive listing of `tube`'s
+   * ready, delayed, or buried jobs (job bodies are not included; follow up
+   * with `peek(id)` for a specific job's body). `limit` defaults to 100 and
+   * is silently capped at 10000.
+   *
+   * @throws {NotFoundError} if the named tube does not exist.
+   */
+  async listJobs(
+    tube: string,
+    state: PeekTubeState,
+    limit?: number,
+  ): Promise<JobListEntry[]> {
+    return this.runCommand(listJobs, { tube, state, limit });
+  }
+
   /** list all beanstalkd tubes */
   async listTubes(): Promise<string[]> {
     return this.runCommand(listTubes, void 0);
+  }
+
+  /**
+   * beanstalkd-pi extension: the names of every currently paused tube,
+   * alphabetically sorted.
+   */
+  async listTubesPaused(): Promise<string[]> {
+    return this.runCommand(listTubesPaused, void 0);
   }
 
   /** list watched beanstalkd tubes */
@@ -693,6 +736,14 @@ export class BeanstalkdClient {
    */
   async statsTube(tube: string): Promise<TubeStats> {
     return this.runCommand(statsTube, tube);
+  }
+
+  /**
+   * beanstalkd-pi extension: `statsTube()`'s fields for every tube, in one
+   * call instead of `listTubes()` + N x `statsTube()`.
+   */
+  async statsTubeAll(): Promise<TubeStats[]> {
+    return this.runCommand(statsTubeAll, void 0);
   }
 
   /**

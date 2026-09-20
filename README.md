@@ -89,7 +89,7 @@ for (;;) {
 ### beanstalkd-pi support
 
 This client also works against [beanstalkd-pi](https://github.com/fatihky/beanstalkd-pi), a
-wire-compatible reimplementation of beanstalkd that adds nine extension commands with no stock
+wire-compatible reimplementation of beanstalkd that adds thirteen extension commands with no stock
 equivalent. Since these commands don't exist against stock beanstalkd, feature-detect them with
 `detectCapabilities()` (returns `null`, instead of throwing, when the server doesn't recognize the
 "capabilities" command) before relying on them:
@@ -125,6 +125,20 @@ await client.setDlq('some-tube', 3, 'some-tube-dead');
 await client.statsConn(); // the calling connection
 await client.statsConn(someConnectionId);
 await client.listConnections();
+
+// a bounded, non-destructive listing of a tube's jobs (limit defaults to 100, capped at 10000)
+await client.listJobs('some-tube', 'ready', 50); // or 'delayed' / 'buried'
+
+// names of every currently paused tube
+await client.listTubesPaused();
+
+// `statsTube()`'s fields for every tube, in one call
+await client.statsTubeAll();
+
+// turn drain mode on/off, or just report its current state (resolves to the state after running)
+await client.drain('on');
+await client.drain('off');
+await client.drain(); // 'status' is the default; never changes drain mode
 ```
 
 `ServerStats`, `TubeStats`, and `JobStats` also gain a few extra fields when talking to

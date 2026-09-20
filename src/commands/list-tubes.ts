@@ -29,15 +29,17 @@ export class ListTubesCommand extends BeanstalkdCommand<string[], void> {
   }
 
   static parse(response: OkResponse): string[] {
-    return (
-      response.data
-        .toString('ascii') // paylaod must be ascii encoded
-        .slice(4) // cut the header line "---\n"
-        .trim() // trim empty ending line
-        .split('\n')
-        // tube names start with "- "
-        // let's just slice the tube name strings
-        .map((line) => line.slice(2))
-    );
+    const body = response.data
+      .toString('ascii') // paylaod must be ascii encoded
+      .slice(4) // cut the header line "---\n"
+      .trim(); // trim empty ending line
+
+    // an empty sequence ("---\n" with nothing after it) has nothing left to
+    // split; `''.split('\n')` would otherwise yield `['']`, one bogus entry.
+    if (body === '') return [];
+
+    // tube names start with "- "
+    // let's just slice the tube name strings
+    return body.split('\n').map((line) => line.slice(2));
   }
 }

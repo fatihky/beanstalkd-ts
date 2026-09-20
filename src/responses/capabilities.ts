@@ -1,7 +1,7 @@
 import { YamlPayload } from './utils/yaml-payload';
 
 /**
- * The nine beanstalkd-pi extension commands, i.e. every command with no
+ * The thirteen beanstalkd-pi extension commands, i.e. every command with no
  * stock beanstalkd equivalent. Matches the "extensions" list returned by
  * the "capabilities" command.
  */
@@ -11,10 +11,14 @@ export type BeanstalkdExtension =
   | 'kick-tube'
   | 'delete-tube'
   | 'peek-tube'
+  | 'list-jobs'
+  | 'list-tubes-paused'
+  | 'stats-tube-all'
   | 'stats-conn'
   | 'list-connections'
   | 'set-dlq'
-  | 'capabilities';
+  | 'capabilities'
+  | 'drain';
 
 /**
  * beanstalkd-pi extension: what the connected server supports, returned by
@@ -34,9 +38,7 @@ export class Capabilities {
     this.version = yaml.readString('version');
     this.maxJobSize = yaml.readNumber('max-job-size');
     this.maxTubeNameLen = yaml.readNumber('max-tube-name-len');
-    this.extensions = yaml.readBlockList(
-      'extensions',
-    ) as BeanstalkdExtension[];
+    this.extensions = yaml.readBlockList('extensions') as BeanstalkdExtension[];
   }
 
   /** whether the server reported support for the given extension command. */

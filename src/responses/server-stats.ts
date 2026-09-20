@@ -54,19 +54,23 @@ export class ServerStats {
   readonly version: string;
 
   /**
-   * beanstalkd-pi extensions: stats counters for the nine extension commands
-   * plus dead-letter routing, alongside the stock ones above. All 0 against
-   * stock beanstalkd.
+   * beanstalkd-pi extensions: stats counters for the thirteen extension
+   * commands plus dead-letter routing, alongside the stock ones above. All
+   * 0 against stock beanstalkd.
    */
   readonly cmdPutAt: number;
   readonly cmdKickTube: number;
   readonly cmdDeleteTube: number;
   readonly cmdPeekTube: number;
+  readonly cmdListJobs: number;
   readonly cmdStatsConn: number;
   readonly cmdListConnections: number;
+  readonly cmdListTubesPaused: number;
+  readonly cmdStatsTubeAll: number;
   readonly cmdPing: number;
   readonly cmdSetDlq: number;
   readonly cmdCapabilities: number;
+  readonly cmdDrain: number;
   /** total number of jobs automatically routed to a dead-letter tube by "set-dlq". */
   readonly jobDeadLettered: number;
 
@@ -129,11 +133,15 @@ export class ServerStats {
     this.cmdKickTube = yaml.readOptionalNumber('cmd-kick-tube');
     this.cmdDeleteTube = yaml.readOptionalNumber('cmd-delete-tube');
     this.cmdPeekTube = yaml.readOptionalNumber('cmd-peek-tube');
+    this.cmdListJobs = yaml.readOptionalNumber('cmd-list-jobs');
     this.cmdStatsConn = yaml.readOptionalNumber('cmd-stats-conn');
     this.cmdListConnections = yaml.readOptionalNumber('cmd-list-connections');
+    this.cmdListTubesPaused = yaml.readOptionalNumber('cmd-list-tubes-paused');
+    this.cmdStatsTubeAll = yaml.readOptionalNumber('cmd-stats-tube-all');
     this.cmdPing = yaml.readOptionalNumber('cmd-ping');
     this.cmdSetDlq = yaml.readOptionalNumber('cmd-set-dlq');
     this.cmdCapabilities = yaml.readOptionalNumber('cmd-capabilities');
+    this.cmdDrain = yaml.readOptionalNumber('cmd-drain');
     this.jobDeadLettered = yaml.readOptionalNumber('job-dead-lettered');
   }
 }

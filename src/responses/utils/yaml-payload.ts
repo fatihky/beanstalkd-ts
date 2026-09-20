@@ -134,6 +134,11 @@ export class YamlPayload {
     return key in this.values ? this.readNumber(key) : fallback;
   }
 
+  /** like `readNumber`, but returns `undefined` instead of throwing when `key` is absent. */
+  readNumberOrUndefined(key: string): number | undefined {
+    return key in this.values ? this.readNumber(key) : undefined;
+  }
+
   readString(key: string): string {
     if (!(key in this.values)) {
       throw new BeanstalkdInvalidResponseError(

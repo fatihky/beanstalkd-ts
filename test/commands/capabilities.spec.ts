@@ -14,10 +14,14 @@ const payload = [
   '- kick-tube',
   '- delete-tube',
   '- peek-tube',
+  '- list-jobs',
+  '- list-tubes-paused',
+  '- stats-tube-all',
   '- stats-conn',
   '- list-connections',
   '- set-dlq',
   '- capabilities',
+  '- drain',
   '',
 ].join('\n');
 
@@ -36,6 +40,7 @@ describe('capabilities command', () => {
     expect(response.extensions).toContain('put-at');
     expect(response.supports('put-at')).toBe(true);
     expect(response.supports('capabilities')).toBe(true);
+    expect(response.supports('drain')).toBe(true);
   });
 
   it('should throw on an unexpected response', () => {

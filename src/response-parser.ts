@@ -18,6 +18,7 @@ import {
   JobKickedResponse,
   JobTooBigResponse,
   KickedResponse,
+  NotDrainingResponse,
   NotFoundResponse,
   NotIgnoredResponse,
   OkResponse,
@@ -123,6 +124,11 @@ export class BeanstalkdResponseParser {
       return this.handleConstantResponse(data, JobTooBigResponse);
     if (bufStartsWith(data, KickedResponse.prefix))
       return KickedResponse.parse(data);
+    // beanstalkd-pi extension: "drain"'s reply when drain mode is off.
+    // Checked before "NOT_FOUND\r\n", which it never collides with (the byte
+    // after "NOT_" differs: 'D' vs 'F').
+    if (bufStartsWith(data, NotDrainingResponse.raw))
+      return this.handleConstantResponse(data, NotDrainingResponse);
     if (bufStartsWith(data, NotFoundResponse.raw))
       return this.handleConstantResponse(data, NotFoundResponse);
     if (bufStartsWith(data, NotIgnoredResponse.raw))
