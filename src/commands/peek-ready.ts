@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, FoundResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import { type BeanstalkdResponse, FoundResponse, NotFoundResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 const cmd = Buffer.from('peek-ready\r\n');
@@ -11,6 +12,10 @@ export class PeekReadyCommand extends BeanstalkdCommand<FoundResponse, void> {
 
   override handle(response: BeanstalkdResponse): FoundResponse {
     if (response instanceof FoundResponse) return response;
+
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
 
     throw new BeanstalkdInvalidResponseError(
       'peek-ready command expects "found" response',

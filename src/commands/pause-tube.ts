@@ -1,5 +1,10 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, PausedResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import {
+  type BeanstalkdResponse,
+  PausedResponse,
+  NotFoundResponse,
+} from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class PauseTubeCommand extends BeanstalkdCommand<
@@ -11,6 +16,10 @@ export class PauseTubeCommand extends BeanstalkdCommand<
   }
 
   override handle(response: BeanstalkdResponse): PausedResponse {
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     if (response instanceof PausedResponse) return response;
 
     throw new BeanstalkdInvalidResponseError(

@@ -1,8 +1,10 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
+import { NotFoundError } from '../errors';
 import {
   type BeanstalkdResponse,
   ConnectionStats,
   OkResponse,
+  NotFoundResponse,
 } from '../responses';
 import { BeanstalkdCommand } from './command';
 
@@ -24,6 +26,10 @@ export class StatsConnCommand extends BeanstalkdCommand<
   }
 
   override handle(response: BeanstalkdResponse): ConnectionStats {
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     if (!(response instanceof OkResponse))
       throw new BeanstalkdInvalidResponseError();
 

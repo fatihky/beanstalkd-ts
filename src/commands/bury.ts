@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, BuriedResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import { type BeanstalkdResponse, BuriedResponse, NotFoundResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 interface BuryParam {
@@ -17,8 +18,12 @@ export class BuryCommand extends BeanstalkdCommand<BuriedResponse, BuryParam> {
       return response;
     }
 
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     throw new BeanstalkdInvalidResponseError(
-      'release command expects "released response"',
+      'bury command expects "buried" response',
     );
   }
 }

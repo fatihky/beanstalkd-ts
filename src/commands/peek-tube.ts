@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, FoundResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import { type BeanstalkdResponse, FoundResponse, NotFoundResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export type PeekTubeState = 'ready' | 'delayed' | 'buried';
@@ -27,6 +28,10 @@ export class PeekTubeCommand extends BeanstalkdCommand<
 
   override handle(response: BeanstalkdResponse): FoundResponse {
     if (response instanceof FoundResponse) return response;
+
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
 
     throw new BeanstalkdInvalidResponseError(
       'peek-tube command expects a "found" response',

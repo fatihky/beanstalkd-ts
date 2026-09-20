@@ -48,6 +48,8 @@ import {
   BeanstalkdInternalError,
   BuriedError,
   DeadlineSoonError,
+  DrainingError,
+  JobTooBigError,
   JobBuriedError,
   NotFoundError,
   NotIgnoredError,
@@ -65,11 +67,13 @@ import {
   type Capabilities,
   type ConnectionStats,
   DeadlineSoonResponse,
+  DrainingResponse,
   type DeletedResponse,
   type FoundResponse,
   type InsertedResponse,
   InternalErrorResponse,
   JobBuriedResponse,
+  JobTooBigResponse,
   type JobKickedResponse,
   type JobListEntry,
   type JobStats,
@@ -77,6 +81,7 @@ import {
   NotFoundResponse,
   NotIgnoredResponse,
   OutOfMemoryResponse,
+  ReleasedResponse,
   type PausedResponse,
   type ServerStats,
   TimedOutResponse,
@@ -188,8 +193,10 @@ export class BeanstalkdClient {
       return new DeadlineSoonError();
     if (response instanceof InternalErrorResponse)
       return new BeanstalkdInternalError();
+    if (response instanceof DrainingResponse) return new DrainingError();
     if (response instanceof JobBuriedResponse)
       return new JobBuriedError(response.jobId);
+    if (response instanceof JobTooBigResponse) return new JobTooBigError();
     if (response instanceof NotFoundResponse) return new NotFoundError();
     if (response instanceof NotIgnoredResponse) return new NotIgnoredError();
     if (response instanceof OutOfMemoryResponse) return new OutOfMemoryError();
@@ -660,7 +667,7 @@ export class BeanstalkdClient {
     jobId: number,
     priority?: number,
     delaySeconds?: number,
-  ): Promise<DeletedResponse> {
+  ): Promise<ReleasedResponse> {
     return this.runCommand(release, {
       jobId,
       pri: priority ?? this.defaultPriority,

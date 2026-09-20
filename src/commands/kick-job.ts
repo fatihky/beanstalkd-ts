@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, JobKickedResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import { type BeanstalkdResponse, JobKickedResponse, NotFoundResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 /**
@@ -23,6 +24,10 @@ export class KickJobCommand extends BeanstalkdCommand<
   override handle(response: BeanstalkdResponse): JobKickedResponse {
     if (response instanceof JobKickedResponse) {
       return response;
+    }
+
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
     }
 
     throw new BeanstalkdInvalidResponseError(

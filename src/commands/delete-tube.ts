@@ -1,5 +1,10 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, TubeDeletedResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import {
+  type BeanstalkdResponse,
+  NotFoundResponse,
+  TubeDeletedResponse,
+} from '../responses';
 import { BeanstalkdCommand } from './command';
 
 /**
@@ -18,6 +23,10 @@ export class DeleteTubeCommand extends BeanstalkdCommand<
 
   override handle(response: BeanstalkdResponse): TubeDeletedResponse {
     if (response instanceof TubeDeletedResponse) return response;
+
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
 
     throw new BeanstalkdInvalidResponseError(
       'delete-tube command expects a "deleted" response',

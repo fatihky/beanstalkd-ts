@@ -1,8 +1,9 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { BuriedError } from '../errors';
+import { BuriedError, NotFoundError } from '../errors';
 import {
   type BeanstalkdResponse,
   BuriedResponse,
+  NotFoundResponse,
   ReleasedResponse,
 } from '../responses';
 import { BeanstalkdCommand } from './command';
@@ -32,8 +33,12 @@ export class ReleaseCommand extends BeanstalkdCommand<
       return response;
     }
 
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     throw new BeanstalkdInvalidResponseError(
-      'release command expects "released response"',
+      'release command expects "released" response',
     );
   }
 }

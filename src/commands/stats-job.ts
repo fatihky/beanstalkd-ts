@@ -1,5 +1,11 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, JobStats, OkResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import {
+  type BeanstalkdResponse,
+  JobStats,
+  OkResponse,
+  NotFoundResponse,
+} from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class StatsJobCommand extends BeanstalkdCommand<JobStats, number> {
@@ -8,6 +14,10 @@ export class StatsJobCommand extends BeanstalkdCommand<JobStats, number> {
   }
 
   override handle(response: BeanstalkdResponse): JobStats {
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     if (!(response instanceof OkResponse))
       throw new BeanstalkdInvalidResponseError(
         'stats-job command expects "ok" response',

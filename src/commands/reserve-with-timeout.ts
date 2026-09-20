@@ -1,8 +1,14 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
 import {
+  DeadlineSoonError,
+  TimedOutError,
+} from '../errors';
+import {
   BeanstalkdJob,
   type BeanstalkdResponse,
   ReservedResponse,
+  DeadlineSoonResponse,
+  TimedOutResponse,
 } from '../responses';
 import { BeanstalkdCommand } from './command';
 
@@ -19,8 +25,16 @@ export class ReserveWithTimeoutCommand extends BeanstalkdCommand<
       return new BeanstalkdJob(response.jobId, response.payload);
     }
 
+    if (response instanceof DeadlineSoonResponse) {
+      throw new DeadlineSoonError();
+    }
+
+    if (response instanceof TimedOutResponse) {
+      throw new TimedOutError();
+    }
+
     throw new BeanstalkdInvalidResponseError(
-      'reserve-with-timeout command expects "reserved response"',
+      'reserve-with-timeout command expects "reserved" response',
     );
   }
 }

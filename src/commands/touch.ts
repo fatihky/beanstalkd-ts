@@ -1,5 +1,6 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
-import { type BeanstalkdResponse, TouchedResponse } from '../responses';
+import { NotFoundError } from '../errors';
+import { type BeanstalkdResponse, TouchedResponse, NotFoundResponse } from '../responses';
 import { BeanstalkdCommand } from './command';
 
 export class TouchCommand extends BeanstalkdCommand<TouchedResponse, number> {
@@ -10,6 +11,10 @@ export class TouchCommand extends BeanstalkdCommand<TouchedResponse, number> {
   override handle(response: BeanstalkdResponse): TouchedResponse {
     if (response instanceof TouchedResponse) {
       return response;
+    }
+
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
     }
 
     throw new BeanstalkdInvalidResponseError(

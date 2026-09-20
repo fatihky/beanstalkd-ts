@@ -1,8 +1,10 @@
 import { BeanstalkdInvalidResponseError } from '../beanstalkd-invalid-response-error';
+import { NotFoundError } from '../errors';
 import {
   type BeanstalkdResponse,
   JobListEntry,
   OkResponse,
+  NotFoundResponse,
 } from '../responses';
 import { YamlPayload } from '../responses/utils/yaml-payload';
 import { BeanstalkdCommand } from './command';
@@ -33,6 +35,10 @@ export class ListJobsCommand extends BeanstalkdCommand<
   }
 
   override handle(response: BeanstalkdResponse): JobListEntry[] {
+    if (response instanceof NotFoundResponse) {
+      throw new NotFoundError();
+    }
+
     if (!(response instanceof OkResponse))
       throw new BeanstalkdInvalidResponseError(
         'list-jobs command expects an "ok" response',
